@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image"; // <--- Importieren!
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
@@ -17,7 +17,9 @@ const NAV_ITEMS = [
 function NavButton({ href, children }: { href: string; children: React.ReactNode }) {
     const [isHovered, setIsHovered] = useState(false);
     const [isPressed, setIsPressed] = useState(false);
-    const lenis = useLenis(({ scroll }) => {});
+
+    // Hook holen
+    const lenis = useLenis();
 
     const springStyles = useSpring({
         scale: isPressed ? 0.95 : isHovered ? 1.05 : 1,
@@ -27,12 +29,11 @@ function NavButton({ href, children }: { href: string; children: React.ReactNode
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
         if (href.startsWith("#")) {
-            e.preventDefault();
+            e.preventDefault(); // Verhindert native Sprünge UND globales Script
             const id = href.slice(1);
             const element = document.getElementById(id);
-            if (element) {
-                // Nutze Lenis für weiches, konsistentes Scrolling
-                lenis?.scrollTo(element, { offset: -120, duration: 0.8 });
+            if (element && lenis) {
+                lenis.scrollTo(element, { offset: -120, duration: 1.2 });
             }
         }
     };
@@ -63,19 +64,16 @@ export function Header() {
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-paper/90 backdrop-blur-sm py-4 px-6 border-b border-coffee-dark/5">
             <div className="max-w-7xl mx-auto flex items-center justify-start gap-8 md:gap-12">
-
-                {/* --- LOGO UPDATE --- */}
                 <div className="w-16 h-16 bg-paper border-2 border-coffee-dark rounded-full flex items-center justify-center overflow-hidden shadow-sm shrink-0 relative">
                     <Image
-                        src="/images/logo.png" // Pfad zu deinem Logo
+                        src="/images/logo.png"
                         alt="Logo"
                         width={64}
                         height={64}
-                        className="object-contain p-2" // p-2 gibt dem Logo etwas Luft zum Rand
+                        className="object-contain p-2"
                     />
                 </div>
 
-                {/* NAVIGATION */}
                 <div className="hidden md:flex gap-4">
                     {NAV_ITEMS.map((item) => (
                         <NavButton key={item.label} href={item.href}>
@@ -83,7 +81,6 @@ export function Header() {
                         </NavButton>
                     ))}
                 </div>
-
             </div>
         </nav>
     );

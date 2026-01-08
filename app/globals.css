@@ -25,32 +25,19 @@
 }
 
 @keyframes shine {
-  0% {
-    transform: scale(0) rotate(0deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1) rotate(45deg);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0) rotate(90deg);
-    opacity: 0;
-  }
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1) rotate(45deg); opacity: 1; }
+  100% { transform: scale(0) rotate(90deg); opacity: 0; }
 }
 
 .animate-shine {
-  /* 2s Dauer, aber infinite Loop */
   animation: shine 2s ease-in-out infinite;
 }
 
 html {
-  /* Das aktiviert das sanfte Scrollen */
-  scroll-behavior: smooth;
+  /* ❌ ENTFERNT: scroll-behavior: smooth; -> Das bricht Lenis! */
 
-  /* WICHTIG: Das sorgt dafür, dass die Überschrift nicht
-     unter deinem fixierten Header verschwindet, wenn du hinscrollst.
-     (ca. die Höhe deines Headers + etwas Luft) */
+  /* WICHTIG: Offset für Anker-Links */
   scroll-padding-top: 120px;
 }
 
@@ -70,13 +57,13 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 
-/* LENIS SCROLL CSS (Pflicht) */
+/* LENIS SCROLL CSS */
 html.lenis, html.lenis body {
   height: auto;
 }
 
 .lenis.lenis-smooth {
-  scroll-behavior: auto !important; /* Verhindert Konflikt mit nativem Scrollen */
+  scroll-behavior: auto !important; /* Erzwingt Lenis Kontrolle */
 }
 
 .lenis.lenis-smooth [data-lenis-prevent] {
