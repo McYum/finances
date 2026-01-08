@@ -1,26 +1,92 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*noinspection CssInvalidAtRule*/
+@theme {
+  /* Farben definieren */
+  --color-coffee-dark: #2D1B0E;
+  --color-coffee: #8B5E3C;
+  --color-coffee-light: #D7CCC8;
+  --color-paper: #FFFBF5;
+  --color-gold: #E5B758;
+
+  /* Schriftarten verknüpfen */
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --font-porter: var(--font-porter);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes twinkle {
+  0%, 100% { transform: scale(0.8) rotate(0deg); opacity: 0.7; }
+  50% { transform: scale(1.2) rotate(15deg); opacity: 1; }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.animate-twinkle {
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1) rotate(45deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(90deg);
+    opacity: 0;
   }
 }
 
+.animate-shine {
+  /* 2s Dauer, aber infinite Loop */
+  animation: shine 2s ease-in-out infinite;
+}
+
+html {
+  /* Das aktiviert das sanfte Scrollen */
+  scroll-behavior: smooth;
+
+  /* WICHTIG: Das sorgt dafür, dass die Überschrift nicht
+     unter deinem fixierten Header verschwindet, wenn du hinscrollst.
+     (ca. die Höhe deines Headers + etwas Luft) */
+  scroll-padding-top: 120px;
+}
+
+/* Standard Styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-coffee-dark);
+  font-family: var(--font-sans);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(6deg); }
+  50% { transform: translateY(-10px) rotate(6deg); }
+}
+
+.animate-bounce-slow {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* LENIS SCROLL CSS (Pflicht) */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important; /* Verhindert Konflikt mit nativem Scrollen */
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
