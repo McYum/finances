@@ -1,31 +1,34 @@
 import Link from "next/link";
 
+// Removed "default" here
 export function Footer() {
-    const currentYear = new Date().getFullYear();
-
     return (
-        // bg-[#111] macht den Hintergrund fast schwarz, wie im Bild
-        <footer className="bg-[#111111] text-white py-12 text-center mt-auto">
-            <div className="max-w-6xl mx-auto px-4 flex flex-col items-center gap-4">
-
-                {/* Copyright Zeile */}
-                <p className="text-base font-medium text-white/90">
-                    © {currentYear} Coffee4Money All rights reserved.
-                </p>
-
-                {/* Links Zeile (mit leichter Transparenz wie im Design) */}
-                <div className="flex flex-wrap justify-center gap-6 text-white/60 text-sm">
-                    <Link href="/rechtliches" className="hover:text-white transition-colors">
-                        Rechtliches
-                    </Link>
-                    <Link href="/privatsphaere" className="hover:text-white transition-colors">
-                        Privatsphäre
-                    </Link>
-                    <Link href="/barrierefreiheit" className="hover:text-white transition-colors">
-                        Barrierefreiheit
-                    </Link>
+        <footer className="bg-[#1a1918] text-[#FDFCF8] py-12 px-6 border-t border-[#2D2A26]">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="text-sm opacity-80">
+                    © {new Date().getFullYear()} Coffee4Money All rights reserved.
                 </div>
 
+                <nav className="flex flex-wrap justify-center gap-6 text-sm font-medium">
+                    <Link
+                        href="/legal/impressum"
+                        className="hover:text-[#d48c55] transition-colors duration-200"
+                    >
+                        Rechtliches
+                    </Link>
+                    <Link
+                        href="/legal/datenschutz"
+                        className="hover:text-[#d48c55] transition-colors duration-200"
+                    >
+                        Privatsphäre
+                    </Link>
+                    <Link
+                        href="/legal/barrierefreiheit"
+                        className="hover:text-[#d48c55] transition-colors duration-200"
+                    >
+                        Barrierefreiheit
+                    </Link>
+                </nav>
             </div>
         </footer>
     );
