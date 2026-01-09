@@ -1,205 +1,344 @@
 "use client";
 
+import { useState, useEffect, useMemo, useRef, memo } from "react";
 import Image from "next/image";
+import { motion, useSpring, useTransform, useInView, useScroll } from "framer-motion";
 import { RetroButton } from "@/components/ui/RetroButton";
-import { motion, type Variants } from "framer-motion";
+import { SparkleCluster } from "@/components/ui/SparkleCluster";
+import { cn } from "@/lib/utils";
 
-// --- OPTIMIZED ANIMATION CONFIG ---
-const cardVariants: Variants = {
-    offscreen: (direction: "left" | "right" | "bottom") => ({
-        // OPTIMIZATION: Reduced movement distance (30px) for less browser work
-        y: direction === "bottom" ? 40 : 20,
-        x: direction === "left" ? -30 : direction === "right" ? 30 : 0,
-        opacity: 0,
-        scale: 0.95,
-        // OPTIMIZATION: Hardware acceleration hint
-        willChange: "transform, opacity",
-    }),
-    onscreen: {
-        y: 0,
-        x: 0,
-        opacity: 1,
-        scale: 1,
-        transition: {
-            type: "spring",
-            bounce: 0.2, // Lower bounce = easier for browser to render smoothly
-            duration: 0.8,
-        }
-    },
-    exit: {
-        opacity: 0,
-        scale: 0.95,
-        transition: { duration: 0.3, ease: "easeOut" }
-    }
+const CONFIG = {
+    pathImage: { x: 0, y: 0, scale: 1.0, opacity: 0.8 },
+    station1: { x: -400, y: 0 },
+    station2: { x: 0, y: 0 },
+    station3: { x: -50, y: 100 }
 };
 
-export function StorySection() {
+const NumberTicker = memo(function NumberTicker({ value, className, prefix = "" }: { value: number, className?: string, prefix?: string }) {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: false, margin: "-20px" });
+    const spring = useSpring(0, { mass: 0.5, stiffness: 75, damping: 15 });
+    const display = useTransform(spring, (current) => `${prefix}${Math.round(current).toLocaleString('de-DE')}`);
+
+    useEffect(() => {
+        if (isInView) {
+            spring.set(value || 0);
+        } else {
+            spring.jump(0);
+        }
+    }, [isInView, value, spring]);
+
+    return <motion.span ref={ref} className={className}>{display}</motion.span>;
+});
+
+const STATIC_POSITIONS = Array.from({ length: 50 }).map(() => ({
+    x: Math.random() * 80 + 10,
+    y: Math.random() * 80 + 10,
+    rotate: Math.random() * 360,
+    delay: Math.random() * 0.3,
+}));
+
+const CoinScatter = memo(function CoinScatter({
+                                                  count,
+                                                  className,
+                                                  coinSize = "w-6 h-6 md:w-8 md:h-8"
+                                              }: {
+    count: number;
+    className?: string;
+    coinSize?: string;
+}) {
+    const safeCount = Math.min(count, 30);
+    const visibleCoins = STATIC_POSITIONS.slice(0, safeCount);
+
     return (
-        <section className="relative py-20 bg-white overflow-hidden">
+        <div className={cn("absolute inset-0 pointer-events-none z-20 overflow-visible", className)}>
+            {visibleCoins.map((pos, i) => (
+                <motion.div
+                    key={i}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: pos.delay }}
+                    className={cn("absolute will-change-transform", coinSize)}
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, rotate: `${pos.rotate}deg` }}
+                >
+                    <Image src="/images/story/coin.png" alt="Coin" fill className="object-contain drop-shadow-sm" sizes="48px" />
+                </motion.div>
+            ))}
+        </div>
+    );
+});
 
-            {/* 1. HEADER */}
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                // OPTIMIZATION: "margin: -10% 0px" triggers animation slightly later/earlier to save resources when off-screen
-                viewport={{ once: false, margin: "-10% 0px" }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="text-center mb-20 px-4"
-            >
-                <h2 className="text-3xl md:text-5xl font-serif font-bold text-coffee-dark uppercase leading-tight">
+export function StorySection() {
+    const [weeklySavings, setWeeklySavings] = useState(25);
+    const containerRef = useRef<HTMLElement>(null);
+
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start 80%", "end 20%"]
+    });
+
+    const smoothScroll = useSpring(scrollYProgress, {
+        stiffness: 100,
+        damping: 30,
+        restDelta: 0.001
+    });
+
+    const pathClip = useTransform(smoothScroll, [0, 0.9], ["inset(0 0 100% 0)", "inset(0 0 0% 0)"]);
+
+    const smoothSavings = useSpring(25, { stiffness: 150, damping: 25 });
+    useEffect(() => { smoothSavings.set(weeklySavings); }, [weeklySavings, smoothSavings]);
+
+    const sliderPercent = useTransform(smoothSavings, [5, 100], ["0%", "100%"]);
+    const potScale = useTransform(smoothSavings, [5, 100], [1, 1.25]);
+
+    const stats = useMemo(() => {
+        const monthly = weeklySavings * 4.33;
+        const rate = 0.07;
+        const months15 = 15 * 12;
+        const months30 = 30 * 12;
+        const monthlyRate = rate / 12;
+
+        const calc = (m: number) => {
+            const fv = monthly * ((Math.pow(1 + monthlyRate, m) - 1) / monthlyRate);
+            const total = monthly * m;
+            return { fv, total, interest: fv - total };
+        };
+
+        return { y15: calc(months15), y30: calc(months30) };
+    }, [weeklySavings]);
+
+    return (
+        <section ref={containerRef} className="relative pt-24 pb-96 bg-[#FFFBF5] overflow-visible">
+            <div className="text-center mb-16 md:mb-32 px-4 relative z-20">
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    className="text-4xl md:text-6xl font-serif font-bold text-coffee-dark uppercase leading-tight"
+                >
                     Vom Kleingeld zum Vermögen: <br />
-                    <span className="text-coffee">Die Magie der Zeit</span>
-                </h2>
-            </motion.div>
+                    <span className="text-coffee italic">Die Magie der Zeit</span>
+                </motion.h2>
+            </div>
 
-            <div className="max-w-5xl mx-auto relative px-4 min-h-[1200px]">
-
-                {/*
-                   2. DER WEG (SVG) - OPTIMIZED
-                   Keep 'once: true' here. Drawing a path is CPU intensive.
-                   Drawing it every time you scroll up/down causes major lag.
-                */}
-                <div className="absolute top-0 left-0 w-full h-full -z-10 hidden md:block pointer-events-none">
-                    <svg className="w-full h-full" viewBox="0 0 800 1200" preserveAspectRatio="none">
-                        <motion.path
-                            d="M 100,50 Q 400,50 600,200 T 300,500 T 600,850 L 600,950"
-                            fill="none"
-                            stroke="#E5B758"
-                            strokeWidth="6"
-                            strokeLinecap="round"
-                            className="drop-shadow-md"
-                            initial={{ pathLength: 0 }}
-                            whileInView={{ pathLength: 1 }}
-                            viewport={{ once: true, amount: 0.1 }}
-                            transition={{ duration: 1.5, ease: "easeInOut" }}
-                        />
-                        <motion.path
-                            d="M 585,940 L 600,960 L 615,940"
-                            fill="none" stroke="#E5B758" strokeWidth="6" strokeLinecap="round"
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 1.5 }}
-                        />
-                        <text x="400" y="40" textAnchor="middle" fill="#8B5E3C" className="font-bold text-xs tracking-widest uppercase">Weg des Geldes</text>
-                    </svg>
-                </div>
-
-                {/* 3. START-MASKOTTCHEN */}
+            <div className="max-w-6xl mx-auto relative px-4 min-h-[2200px]">
                 <motion.div
-                    custom="left"
-                    initial="offscreen"
-                    whileInView="onscreen"
-                    // OPTIMIZATION: margin "-100px" prevents the "flicker loop" at the edge of the screen
-                    viewport={{ once: false, amount: 0.3, margin: "-100px" }}
-                    variants={cardVariants}
-                    className="md:absolute top-0 left-0 md:left-10 w-40 h-40 md:w-56 md:h-56 mx-auto md:mx-0 mb-12 md:mb-0"
+                    className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none hidden md:block will-change-transform"
+                    style={{
+                        clipPath: pathClip,
+                        opacity: CONFIG.pathImage.opacity,
+                        transform: `translate(${CONFIG.pathImage.x}px, ${CONFIG.pathImage.y}px) scale(${CONFIG.pathImage.scale})`
+                    }}
                 >
-                    <div className="w-full h-full relative">
-                        {/* OPTIMIZATION: 'sizes' prop helps mobile load smaller images */}
-                        <Image
-                            src="/images/mascot.png"
-                            alt="Start"
-                            fill
-                            sizes="(max-width: 768px) 100vw, 250px"
-                            className="object-contain"
-                        />
-                        <div className="absolute -top-4 -right-4 bg-white border border-coffee-dark px-2 py-1 text-xs rounded-lg rotate-12 shadow-sm">Let's Go!</div>
+                    <div className="relative w-full h-full">
+                        <Image src="/images/story/Path_temp.png" alt="Path" fill className="object-contain" priority sizes="100vw" />
                     </div>
                 </motion.div>
 
-                {/* 4. STEP 1: HEUTE */}
                 <motion.div
-                    custom="right"
-                    initial="offscreen"
-                    whileInView="onscreen"
-                    viewport={{ once: false, amount: 0.3, margin: "-100px" }}
-                    variants={cardVariants}
-                    className="md:absolute top-[150px] right-0 md:right-[10%] w-full md:w-[350px] flex flex-col items-center md:items-start text-center md:text-left mb-16 md:mb-0"
+                    className="relative grid md:grid-cols-2 gap-12 items-center mb-48 z-10"
+                    style={{ x: CONFIG.station1.x, y: CONFIG.station1.y }}
                 >
-                    <h3 className="text-2xl font-bold text-coffee-dark mb-2">HEUTE</h3>
-                    <p className="text-sm font-medium text-gray-600 mb-4">Wie viel sparst du pro Woche?</p>
-
-                    <div className="text-6xl font-serif font-bold text-coffee-dark border-b-4 border-coffee/20 inline-block mb-4 relative">
-                        25€
-                        <span className="absolute -right-8 top-0 bg-[#D7CCC8] text-coffee-dark text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border border-coffee-dark">x5</span>
-                    </div>
-
-                    <div className="w-32 h-32 bg-orange-100 rounded-full border-2 border-dashed border-coffee-dark flex items-center justify-center text-4xl mt-2 relative shadow-md">
-                        🌱
-                        <span className="absolute bottom-0 text-xs bg-white px-2 border rounded shadow-sm">Start</span>
-                    </div>
-                </motion.div>
-
-                {/* 5. STEP 2: IN 15 JAHREN */}
-                <motion.div
-                    custom="left"
-                    initial="offscreen"
-                    whileInView="onscreen"
-                    viewport={{ once: false, amount: 0.3, margin: "-100px" }}
-                    variants={cardVariants}
-                    className="md:absolute top-[450px] left-0 md:left-[5%] w-full md:w-[450px] flex flex-col md:flex-row items-center gap-6 mb-16 md:mb-0"
-                >
-                    <div className="w-48 h-48 bg-green-100 rounded-full border-2 border-dashed border-coffee-dark flex items-center justify-center text-6xl relative order-2 md:order-1 shadow-lg">
-                        🌳
-                        <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-white border rounded-full text-2xl flex items-center justify-center shadow-sm">💧</div>
-                    </div>
-                    <div className="flex flex-col gap-4 order-1 md:order-2">
-                        <h3 className="text-2xl font-bold text-coffee-dark text-center md:text-left">IN 15 JAHREN</h3>
-                        <div className="bg-paper border-2 border-coffee-dark rounded-lg p-2 shadow-[2px_2px_0px_0px_#2D1B0E] w-40 relative hover:scale-105 transition-transform">
-                            <span className="absolute -top-3 left-2 bg-[#F5F5F0] text-[10px] font-bold px-1 border border-coffee-dark">EINZAHLUNGEN</span>
-                            <p className="text-xl font-black text-coffee-dark">420€</p>
+                    <motion.div
+                        initial={{ x: -50, opacity: 0 }}
+                        whileInView={{ x: 0, opacity: 1 }}
+                        viewport={{ once: true }}
+                        className="flex justify-center md:justify-end relative"
+                    >
+                        <div className="absolute -top-25 right-1/2 translate-x-10 md:right-1 w-40 h-32 md:w-48 md:h-40 z-20">
+                            <Image src="/images/bubble.png" alt="Bubble" fill className="object-contain drop-shadow-md" sizes="(max-width: 768px) 160px, 192px" />
+                            <div className="absolute inset-0 flex items-center justify-center pb-3 pr-2">
+                                <p className="font-bold text-coffee-dark text-lg rotate-[-8deg] leading-tight text-center">
+                                    Fang <br/> klein an!
+                                </p>
+                            </div>
                         </div>
-                        <div className="bg-paper border-2 border-coffee-dark rounded-lg p-2 shadow-[2px_2px_0px_0px_#2D1B0E] w-40 relative hover:scale-105 transition-transform">
-                            <span className="absolute -top-3 left-2 bg-[#F5F5F0] text-[10px] font-bold px-1 border border-coffee-dark">ZINSEN</span>
-                            <p className="text-xl font-black text-coffee-dark">20€</p>
+                        <div className="w-48 h-48 md:w-64 md:h-64 relative">
+                            <Image
+                                src="/images/mascot.png"
+                                alt="Mascot"
+                                fill
+                                className="object-contain scale-x-[-1]"
+                                sizes="(max-width: 768px) 192px, 256px"
+                            />
+                        </div>
+                    </motion.div>
+
+                    <div className="flex flex-col items-center md:items-start z-20 md:mt-120 md:ml-80">
+                        <h3 className="text-3xl font-bold text-coffee-dark mb-3 uppercase tracking-wide">Heute</h3>
+                        <p className="text-lg text-gray-700 mb-6">Wie viel sparst du pro Woche?</p>
+                        <div className="relative w-full md:w-[400px] flex flex-col items-center">
+                            <motion.div className="relative w-40 h-40 mb-6" style={{scale: potScale}}>
+                                <Image src="/images/story/money_pot.png" alt="Pot" fill
+                                       className="object-contain drop-shadow-xl"/>
+
+                                {/* IMPROVED MONEY COUNTER FRAME */}
+                                <div className="absolute top-1/2 right-[-90%] -translate-x-1/2 -translate-y-1/2 mt-2">
+                                    <div
+                                        className="text-3xl font-black text-coffee-dark bg-paper px-4 py-2 rounded-xl border-2 border-coffee-dark shadow-[4px_4px_0px_0px_#2D1B0E] flex items-baseline z-30">
+                                        <NumberTicker value={weeklySavings}/>
+                                        <span className="ml-1 text-2xl">€</span>
+                                    </div>
+                                </div>
+                            </motion.div>
+                            <div
+                                className="w-full bg-[#EFE6DD] p-5 rounded-2xl border-2 border-coffee-dark shadow-[4px_4px_0px_0px_#2D1B0E] relative touch-none">
+                                <input
+                                    type="range"
+                                    min="5"
+                                    max="100"
+                                    step="5"
+                                    value={weeklySavings}
+                                    onChange={(e) => setWeeklySavings(Number(e.target.value))}
+                                    className="absolute inset-0 z-30 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                <div className="relative h-6 w-full flex items-center">
+                                    <div
+                                        className="absolute w-full h-3 bg-white border border-coffee/20 rounded-full overflow-hidden">
+                                        <motion.div className="h-full bg-gradient-to-r from-gold to-orange-400"
+                                                    style={{width: sliderPercent}}/>
+                                    </div>
+                                    <motion.div
+                                        className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-coffee-dark border-2 border-white rounded-full shadow-md z-10 flex items-center justify-center pointer-events-none"
+                                        style={{left: sliderPercent, x: "-50%"}}
+                                    >
+                                        <div className="w-2 h-2 bg-gold rounded-full"/>
+                                    </motion.div>
+                                </div>
+                                <div className="flex justify-between text-xl font-bold text-coffee mt-4 px-1">
+                                    <span>5€</span>
+                                    <span className="uppercase tracking-wider">Wöchentlich</span>
+                                    <span>100€</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
 
-                {/* 6. STEP 3: IN 30 JAHREN */}
                 <motion.div
-                    custom="right"
-                    initial="offscreen"
-                    whileInView="onscreen"
-                    viewport={{ once: false, amount: 0.3, margin: "-100px" }}
-                    variants={cardVariants}
-                    className="md:absolute top-[800px] right-0 md:right-[5%] w-full md:w-[450px] flex flex-col items-center mb-16 md:mb-0"
+                    className="relative grid md:grid-cols-2 gap-8 items-center mb-48 z-10"
+                    style={{x: CONFIG.station2.x, y: CONFIG.station2.y}}
                 >
-                    <h3 className="text-2xl font-bold text-coffee-dark mb-4">IN 30 JAHREN</h3>
-                    <div className="relative hover:scale-105 transition-transform duration-500">
-                        <div className="w-64 h-64 bg-green-200 rounded-full border-4 border-coffee-dark flex items-center justify-center text-8xl z-10 relative shadow-xl">
-                            💰🌳
-                        </div>
-                        <div className="absolute -bottom-4 w-full flex justify-center gap-1 text-2xl animate-bounce">
-                            🟡🟡🟡
-                        </div>
-                    </div>
-                </motion.div>
+                    <motion.div
+                        initial={{x: -50, opacity: 0}}
+                        whileInView={{x: 0, opacity: 1}}
+                        viewport={{once: true}}
+                        className="order-2 md:order-1 flex flex-col items-center relative"
+                    >
+                        <h3 className="text-4xl font-bold text-coffee-dark mb-6 uppercase tracking-wide bg-paper px-4 relative z-10">In 15 Jahren</h3>
+                        <motion.div className="relative w-64 h-64 md:w-80 md:h-80">
+                            <Image src="/images/story/pot_tree.png" alt="Pot Tree" fill
+                                   className="object-contain drop-shadow-2xl z-10"
+                                   sizes="(max-width: 768px) 256px, 320px"/>
+                            <SparkleCluster className="-top-4 -right-4"/>
+                            <SparkleCluster className="bottom-1/3 -left-8" delay={1}/>
+                            <div className="absolute top-[3%] left-[15%] right-[25%] bottom-[60%] z-10">
+                                <CoinScatter count={Math.floor(weeklySavings / 6)}/>
+                            </div>
+                        </motion.div>
 
-                {/* 7. CTA BUTTON */}
-                <motion.div
-                    custom="bottom"
-                    initial="offscreen"
-                    whileInView="onscreen"
-                    viewport={{ once: false, amount: 0.3, margin: "-100px" }}
-                    variants={cardVariants}
-                    className="md:absolute top-[1050px] w-full flex flex-col items-center gap-8"
-                >
-                    <div className="relative">
-                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-gold animate-bounce text-2xl">↓</div>
-                        <RetroButton className="bg-[#E5B758] hover:bg-[#D4A03D]">
-                            MEINEN SPARPLAN <br/> JETZT STARTEN
-                        </RetroButton>
-                    </div>
-                    <div className="bg-[#FFF8E7] border-2 border-coffee-dark rounded-2xl px-8 py-4 max-w-lg text-center shadow-sm">
-                        <p className="font-bold text-coffee-dark text-sm uppercase leading-relaxed">
-                            Man muss nicht reich sein, um anzufangen. <br/>
-                            <span className="text-coffee">Zeit ist wichtiger als viel Geld investiere klug!</span>
+                        <div className="grid grid-cols-2 gap-6 mt-10 w-full max-w-sm">
+                            <div className="relative bg-paper border-2 border-coffee-dark rounded-xl p-4 shadow-[4px_4px_0px_0px_#2D1B0E] text-center overflow-visible">
+                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-coffee-dark text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Einzahlungen</span>
+                                <p className="text-2xl font-black text-coffee-dark mt-1 tracking-tight">
+                                    <NumberTicker value={stats.y15.total}/>€
+                                </p>
+                            </div>
+                            <div className="relative bg-white border-2 border-gold rounded-xl p-4 shadow-[4px_4px_0px_0px_#E5B758] text-center overflow-visible transform scale-105">
+                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-coffee-dark text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Zinsen ✨</span>
+                                <p className="text-2xl font-black text-coffee-dark mt-1 tracking-tight">
+                                    +<NumberTicker value={stats.y15.interest}/>€
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{x: 50, opacity: 0}}
+                        whileInView={{x: 0, opacity: 1}}
+                        viewport={{once: true}}
+                        className="order-1 md:order-2 flex flex-col items-center md:items-start pl-0 md:-ml-24"
+                    >
+                        <div className="relative w-48 h-48 md:w-64 md:h-64 md:mt-24">
+                            <motion.div
+                                animate={{ rotate: [20, 5, 20] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute top-15 left-[-110px] w-32 h-32 md:w-40 md:h-40 z-20"
+                            >
+                                <Image src="/images/story/watering_can.png" alt="Can" fill className="object-contain" />
+                            </motion.div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40">
+                                <Image src="/images/mascot.png" alt="Mascot" fill className="object-contain" />
+                            </div>
+                        </div>
+                        <p className="mt-4 text-center md:text-left text-coffee font-medium max-w-xs">
+                            Kleine Beträge wachsen mit der Zeit. <br/>Der Zinseszins ist dein Wasser! 💧
                         </p>
-                    </div>
+                    </motion.div>
                 </motion.div>
 
+                <motion.div
+                    className="relative flex flex-col items-center z-10"
+                    style={{x: CONFIG.station3.x, y: CONFIG.station3.y}}
+                >
+                    <motion.div
+                        initial={{scale: 0.8, opacity: 0}}
+                        whileInView={{scale: 1, opacity: 1}}
+                        transition={{duration: 0.8}}
+                        viewport={{once: true}}
+                        className="relative w-full max-w-2xl aspect-[16/10] flex flex-col items-center overflow-visible"
+                    >
+                        <h3 className="absolute -top-12 md:-top-20 left-1/2 -translate-x-1/2 text-3xl md:text-4xl font-bold text-coffee-dark uppercase tracking-wide bg-paper px-6 py-2 border-2 border-coffee-dark rounded-full shadow-md z-30 whitespace-nowrap">
+                            In 30 Jahren
+                        </h3>
+
+                        <div className="relative w-full h-full" style={{ transform: "scale(1.2)", transformOrigin: "bottom center" }}>
+                            <Image src="/images/story/money_tree.png" alt="Tree" fill className="object-contain z-10" />
+                            <div className="absolute top-[1%] left-[25%] right-[35%] bottom-[40%] z-10">
+                                <CoinScatter
+                                    count={Math.floor(weeklySavings * 1.5)}
+                                    coinSize="w-8 h-8 md:w-10 md:h-10"
+                                />
+                            </div>
+                            <SparkleCluster className="top-[20%] left-[20%]"/>
+                            <SparkleCluster className="top-[15%] right-[25%]" delay={0.5}/>
+                            <SparkleCluster className="bottom-[40%] left-[10%]" delay={1.2}/>
+                        </div>
+
+                        <div
+                            className="absolute bottom-[-25%] left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm border-4 border-gold px-8 py-4 rounded-3xl shadow-[0px_10px_20px_rgba(0,0,0,0.1)] z-40 text-center min-w-[280px]">
+                            <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Dein Vermögen</p>
+                            <p className="text-4xl md:text-5xl font-porter text-coffee-dark tabular-nums">
+                                <NumberTicker value={stats.y30.fv}/>€
+                            </p>
+                        </div>
+                    </motion.div>
+
+                    <div className="mt-32 flex flex-col items-center gap-6 relative z-30">
+                        <motion.div
+                            animate={{y: [0, 10, 0]}}
+                            transition={{repeat: Infinity, duration: 2}}
+                            className="text-gold text-4xl"
+                        >
+                            ⬇
+                        </motion.div>
+                        <RetroButton
+                            className="text-xl md:text-2xl px-12 py-5 shadow-[inset_0px_-6px_0px_0px_#DFA339,0px_10px_20px_rgba(0,0,0,0.2)]">
+                            MEINEN SPARPLAN <br className="md:hidden"/> JETZT STARTEN
+                        </RetroButton>
+                        <motion.div
+                            initial={{y: 20, opacity: 0}}
+                            whileInView={{y: 0, opacity: 1}}
+                            viewport={{once: true}}
+                            className="bg-[#FFF8E7] border-2 border-coffee-dark rounded-2xl px-6 py-4 max-w-lg text-center shadow-[4px_4px_0px_0px_#2D1B0E] mt-4 mx-4"
+                        >
+                            <p className="font-bold text-coffee-dark text-sm md:text-base uppercase leading-relaxed">
+                                Man muss nicht reich sein, um anzufangen. <br/>
+                                <span className="text-coffee bg-gold/20 px-1">Zeit ist wichtiger als viel Geld</span> –
+                                investiere klug!
+                            </p>
+                        </motion.div>
+                    </div>
+                </motion.div>
             </div>
         </section>
     );
