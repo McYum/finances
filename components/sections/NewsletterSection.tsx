@@ -6,6 +6,7 @@ import { ArrowRight, Star, Layers, Calendar } from "lucide-react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { useSpring, animated } from "@react-spring/web";
 import { SparkleCluster } from "@/components/ui/SparkleCluster";
+import { motion } from "framer-motion";
 
 export function NewsletterSection() {
     const [email, setEmail] = useState("");
@@ -29,7 +30,13 @@ export function NewsletterSection() {
 
     return (
         <section id="newsletter" className="py-20 px-4 max-w-6xl mx-auto mb-10">
-            <div className="bg-white border border-gray-200 rounded-[3rem] p-8 md:p-16 shadow-sm relative overflow-visible">
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3, margin: "-100px" }}
+                transition={{ type: "spring", duration: 1.5, bounce: 0.2 }}
+                className="bg-white border border-gray-200 rounded-[3rem] p-8 md:p-16 shadow-sm relative overflow-visible"
+            >
                 <div className="grid md:grid-cols-2 gap-12 items-center">
 
                     {/* --- LINKE SEITE --- */}
@@ -73,20 +80,12 @@ export function NewsletterSection() {
 
                     {/* --- RECHTE SEITE: BILDER & SPARKLES --- */}
                     <div className="relative flex justify-center min-h-[300px]">
-
-                        {/*
-                           ÄNDERUNG HIER: GRÖSSE ANGEPASST
-                           Vorher: w-64 h-64 md:w-80 md:h-80
-                           Jetzt:  w-72 h-72 md:w-[420px] md:h-[420px]
-                        */}
                         <animated.div style={floatStyles} className="relative w-72 h-72 md:w-[420px] md:h-[420px] mt-10">
 
-                            {/* 1. SPARKLES */}
                             <SparkleCluster className="-top-8 -left-8" delay={0.2} />
                             <SparkleCluster className="top-1/2 -right-12" delay={1.2} />
                             <SparkleCluster className="bottom-0 -left-6" delay={0.7} />
 
-                            {/* 2. SPRECHBLASE */}
                             <div className="absolute -top-20 -right-6 md:-right-10 z-20 w-56 h-40">
                                 <Image
                                     src="/images/bubble.png"
@@ -101,7 +100,6 @@ export function NewsletterSection() {
                                 </div>
                             </div>
 
-                            {/* 3. MASKOTTCHEN */}
                             <div className="relative w-full h-full">
                                 <Image
                                     src="/images/mascot.png"
@@ -115,7 +113,7 @@ export function NewsletterSection() {
                     </div>
 
                 </div>
-            </div>
+            </motion.div>
         </section>
     );
 }

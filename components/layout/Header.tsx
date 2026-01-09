@@ -6,20 +6,20 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { useLenis } from "@studio-freight/react-lenis";
+import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-    { label: "START", href: "#hero" },
-    { label: "SO FUNKTIONIERT'S", href: "#how-it-works" },
-    { label: "ZINS-RECHNER", href: "#calculator" },
-    { label: "NEWSLETTER", href: "#newsletter" },
+    { label: "START", href: "/#hero" },
+    { label: "SO FUNKTIONIERT'S", href: "/#how-it-works" },
+    { label: "ZINS-RECHNER", href: "/#calculator" },
+    { label: "NEWSLETTER", href: "/#newsletter" },
 ];
 
 function NavButton({ href, children }: { href: string; children: React.ReactNode }) {
     const [isHovered, setIsHovered] = useState(false);
     const [isPressed, setIsPressed] = useState(false);
-
-    // Hook holen
     const lenis = useLenis();
+    const pathname = usePathname(); // Check where we are
 
     const springStyles = useSpring({
         scale: isPressed ? 0.95 : isHovered ? 1.05 : 1,
@@ -28,9 +28,9 @@ function NavButton({ href, children }: { href: string; children: React.ReactNode
     });
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-        if (href.startsWith("#")) {
-            e.preventDefault(); // Verhindert native Sprünge UND globales Script
-            const id = href.slice(1);
+        if (pathname === "/" && href.includes("#")) {
+            e.preventDefault();
+            const id = href.split("#")[1];
             const element = document.getElementById(id);
             if (element && lenis) {
                 lenis.scrollTo(element, { offset: -120, duration: 1.2 });
@@ -64,7 +64,7 @@ export function Header() {
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-paper/90 backdrop-blur-sm py-4 px-6 border-b border-coffee-dark/5">
             <div className="max-w-7xl mx-auto flex items-center justify-start gap-8 md:gap-12">
-                <div className="w-16 h-16 bg-paper border-2 border-coffee-dark rounded-full flex items-center justify-center overflow-hidden shadow-sm shrink-0 relative">
+                <Link href="/" className="w-16 h-16 bg-paper border-2 border-coffee-dark rounded-full flex items-center justify-center overflow-hidden shadow-sm shrink-0 relative cursor-pointer">
                     <Image
                         src="/images/logo.png"
                         alt="Logo"
@@ -72,7 +72,7 @@ export function Header() {
                         height={64}
                         className="object-contain p-2"
                     />
-                </div>
+                </Link>
 
                 <div className="hidden md:flex gap-4">
                     {NAV_ITEMS.map((item) => (
