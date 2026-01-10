@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { RetroButton } from "@/components/ui/RetroButton";
+import Link from "next/link";
 
 export function CtaSection() {
     const containerVariants = {
@@ -55,12 +56,14 @@ export function CtaSection() {
                             </motion.h2>
 
                             <motion.div variants={itemVariants} className="mt-12 flex justify-center md:justify-start">
-                                <RetroButton>
-                                    <span className="flex items-center gap-3">
-                                        Zinsrechner
-                                        <ArrowRight/>
-                                    </span>
-                                </RetroButton>
+                                <Link href="/zinsrechner">
+                                    <RetroButton>
+                                        <span className="flex items-center gap-3">
+                                            Zinsrechner
+                                            <ArrowRight/>
+                                        </span>
+                                    </RetroButton>
+                                </Link>
                             </motion.div>
                         </div>
 

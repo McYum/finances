@@ -11,7 +11,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
     { label: "START", href: "/#hero" },
     { label: "SO FUNKTIONIERT'S", href: "/#how-it-works" },
-    { label: "ZINS-RECHNER", href: "/zinsrechner" },
+    { label: "ZINS-RECHNER", href: "/#calculator" },
     { label: "NEWSLETTER", href: "/#newsletter" },
 ];
 
