@@ -38,6 +38,52 @@ function YearButton({ year, isSelected, onClick }: { year: number; isSelected: b
     );
 }
 
+function CoffeeSlider({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+    const [isHovered, setIsHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const thumbSpring = useSpring({
+        scale: isDragging ? 1.2 : isHovered ? 1.15 : 1,
+        y: isDragging ? -2 : isHovered ? -2 : 0,
+        config: { mass: 1, tension: 300, friction: 20 },
+    });
+
+    const progress = ((value - 1) / 19) * 100;
+
+    return (
+        <div className="relative w-full h-8">
+            <div className="absolute top-1/2 -translate-y-1/2 w-full h-2 bg-coffee-dark/20 rounded-full"></div>
+            <animated.div
+                className="absolute top-1/2 -translate-y-1/2 h-2 bg-coffee-dark rounded-full"
+                style={{ width: `${progress}%` }}
+            />
+            <animated.div
+                style={{
+                    ...thumbSpring,
+                    left: `calc(${progress}% - 20px)`,
+                }}
+                className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-coffee-dark rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg border-2 border-paper"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
+                <span className="text-paper font-bold text-lg">{value}</span>
+            </animated.div>
+            <input
+                type="range"
+                min="1"
+                max="20"
+                value={value}
+                onChange={(e) => onChange(parseInt(e.target.value))}
+                onMouseDown={() => setIsDragging(true)}
+                onMouseUp={() => setIsDragging(false)}
+                onTouchStart={() => setIsDragging(true)}
+                onTouchEnd={() => setIsDragging(false)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+        </div>
+    );
+}
+
 export default function ZinsrechnerPage() {
     // States: Stock Calculator
     const [selectedStock, setSelectedStock] = useState<string>("AAPL");
@@ -144,44 +190,71 @@ export default function ZinsrechnerPage() {
     };
 
     const generateHistoricalDataFromReal = (timeSeries: any, dates: string[], currentPrice: number) => {
-        const tenYearsAgo = new Date();
-        tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+        const sortedDates = dates.sort();
+        const yearsAgo = selectedYears;
 
-        let oldestPrice = currentPrice;
-        let oldestDate = new Date();
+        // Startdatum: vor X Jahren
+        const startDate = new Date();
+        startDate.setFullYear(startDate.getFullYear() - yearsAgo);
 
-        for (const date of dates) {
+        // Finde den Preis zum Startdatum
+        let startPrice = currentPrice;
+        for (const date of sortedDates) {
             const dateObj = new Date(date);
-            if (dateObj <= tenYearsAgo) {
-                oldestPrice = parseFloat(timeSeries[date]["4. close"]);
-                oldestDate = dateObj;
+            if (dateObj >= startDate) {
+                startPrice = parseFloat(timeSeries[date]["4. close"]);
                 break;
             }
         }
 
-        // CAGR
-        const years = (new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-        const actualReturn = Math.pow(currentPrice / oldestPrice, 1 / years) - 1;
-        const avgAnnualReturn = Math.min(actualReturn, currentAvgReturn);
-        const monthlyReturn = Math.pow(1 + avgAnnualReturn, 1/12) - 1;
-
         const historicalData = [];
         const monthlyInvest = (coffeesPerWeek * coffeePrice * weeksPerYear) / 12;
+        let totalShares = 0;
+        let totalInvested = 0;
 
-        for (let i = 0; i <= selectedYears; i += 5) {
-            const year = new Date().getFullYear() + i;
-            const months = i * 12;
-            const totalInvested = monthlyInvest * months;
+        // Durchlaufe die letzten X Jahre in 5-Jahres-Schritten
+        for (let i = 0; i <= yearsAgo; i += 5) {
+            const year = new Date().getFullYear() - yearsAgo + i;
+            const targetDate = new Date();
+            targetDate.setFullYear(year);
 
-            let futureValue = 0;
-            if (months > 0) {
-                // FV = PMT × [(1+r)^n - 1] / r
-                futureValue = monthlyInvest * (Math.pow(1 + monthlyReturn, months) - 1) / monthlyReturn;
+            // Finde den Preis für dieses Jahr
+            let priceAtYear = currentPrice;
+            for (const date of sortedDates) {
+                const dateObj = new Date(date);
+                if (dateObj >= targetDate) {
+                    priceAtYear = parseFloat(timeSeries[date]["4. close"]);
+                    break;
+                }
             }
+
+            // Berechne wie viele Aktien gekauft wurden
+            const monthsPassed = i * 12;
+            totalInvested = monthlyInvest * monthsPassed;
+
+            // Simuliere monatliche Käufe
+            totalShares = 0;
+            for (let month = 0; month < monthsPassed; month++) {
+                const monthDate = new Date(startDate);
+                monthDate.setMonth(monthDate.getMonth() + month);
+
+                let monthPrice = startPrice;
+                for (const date of sortedDates) {
+                    const dateObj = new Date(date);
+                    if (dateObj >= monthDate) {
+                        monthPrice = parseFloat(timeSeries[date]["4. close"]);
+                        break;
+                    }
+                }
+
+                totalShares += monthlyInvest / monthPrice;
+            }
+
+            const portfolioValue = totalShares * priceAtYear;
 
             historicalData.push({
                 year: year.toString(),
-                Wert: Math.round(futureValue),
+                Wert: Math.round(portfolioValue),
                 Investiert: Math.round(totalInvested),
             });
         }
@@ -190,25 +263,28 @@ export default function ZinsrechnerPage() {
     };
 
     const generateHistoricalDataFallback = () => {
-        const monthlyReturn = Math.pow(1 + currentAvgReturn, 1/12) - 1;
+        const historicalData = [];
         const monthlyInvest = (coffeesPerWeek * coffeePrice * weeksPerYear) / 12;
 
-        const historicalData = [];
-
+        // Berechne rückwärts: Was wäre wenn man vor X Jahren angefangen hätte?
         for (let i = 0; i <= selectedYears; i += 5) {
-            const year = new Date().getFullYear() + i;
-            const months = i * 12;
-            const totalInvested = monthlyInvest * months;
+            const year = new Date().getFullYear() - selectedYears + i;
+            const monthsPassed = i * 12;
+            const totalInvested = monthlyInvest * monthsPassed;
 
-            let futureValue = 0;
-            if (months > 0) {
-                // FV = PMT × [(1+r)^n - 1] / r
-                futureValue = monthlyInvest * (Math.pow(1 + monthlyReturn, months) - 1) / monthlyReturn;
+            let portfolioValue = 0;
+
+            // Simuliere monatliche Investitionen mit Wachstum bis heute
+            for (let month = 0; month < monthsPassed; month++) {
+                const monthsRemaining = monthsPassed - month;
+                const monthlyReturn = Math.pow(1 + currentAvgReturn, 1/12) - 1;
+                const futureValue = monthlyInvest * Math.pow(1 + monthlyReturn, monthsRemaining);
+                portfolioValue += futureValue;
             }
 
             historicalData.push({
                 year: year.toString(),
-                Wert: Math.round(futureValue),
+                Wert: Math.round(portfolioValue),
                 Investiert: Math.round(totalInvested),
             });
         }
@@ -324,27 +400,10 @@ export default function ZinsrechnerPage() {
                                 <label className="block text-lg font-bold text-coffee-dark mb-4 text-center">
                                     Tassen Kaffee pro Woche
                                 </label>
-                                <div className="relative w-full h-8">
-                                    <div className="absolute top-1/2 -translate-y-1/2 w-full h-2 bg-coffee-dark/20 rounded-full"></div>
-                                    <div
-                                        className="absolute top-1/2 -translate-y-1/2 h-2 bg-coffee-dark rounded-full"
-                                        style={{ width: `${((coffeesPerWeek - 1) / 19) * 100}%` }}
-                                    ></div>
-                                    <div
-                                        className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-coffee-dark rounded-full flex items-center justify-center cursor-pointer shadow-lg border-2 border-paper"
-                                        style={{ left: `calc(${((coffeesPerWeek - 1) / 19) * 100}% - 20px)` }}
-                                    >
-                                        <span className="text-paper font-bold text-lg">{coffeesPerWeek}</span>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="1"
-                                        max="20"
-                                        value={coffeesPerWeek}
-                                        onChange={(e) => setCoffeesPerWeek(parseInt(e.target.value))}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                </div>
+                                <CoffeeSlider
+                                    value={coffeesPerWeek}
+                                    onChange={setCoffeesPerWeek}
+                                />
                                 <p className="text-sm text-coffee-medium text-center mt-4">
                                     = {formatCurrency(yearlyInvestment)} / Jahr
                                 </p>
@@ -450,8 +509,7 @@ export default function ZinsrechnerPage() {
                         {/* Hinweis */}
                         <div className="mt-6 p-4 bg-cream/50 border-2 border-coffee-dark/20 rounded-xl">
                             <p className="text-sm text-coffee-medium text-center">
-                                💡 <span className="font-bold">Hinweis:</span> Diese Simulation basiert auf der historischen durchschnittlichen Rendite von {currentStock?.name} (~{(currentAvgReturn * 100).toFixed(0)}% p.a.).
-                                Vergangene Performance ist keine Garantie für zukünftige Ergebnisse.
+                                💡 <span className="font-bold">Hinweis:</span> Diese Simulation zeigt, was passiert <span className="font-bold">wäre</span>, wenn du vor {selectedYears} Jahren angefangen hättest, monatlich dein Kaffee-Geld in {currentStock?.name} zu investieren (basierend auf historischen Kursen mit ~{(currentAvgReturn * 100).toFixed(0)}% p.a. Durchschnittsrendite).
                             </p>
                         </div>
                     </motion.div>
