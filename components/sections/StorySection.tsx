@@ -202,7 +202,7 @@ export function StorySection() {
                                 <Image src="/images/story/money_pot.png" alt="Pot" fill
                                        className="object-contain drop-shadow-xl"/>
 
-                                {/* IMPROVED MONEY COUNTER FRAME */}
+                                {/* MONEY COUNTER FRAME */}
                                 <div className="absolute top-1/2 right-[-90%] -translate-x-1/2 -translate-y-1/2 mt-2">
                                     <div
                                         className="text-3xl font-black text-coffee-dark bg-paper px-4 py-2 rounded-xl border-2 border-coffee-dark shadow-[4px_4px_0px_0px_#2D1B0E] flex items-baseline z-30">
