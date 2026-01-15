@@ -48,15 +48,14 @@ export function ETFControls({
                     ))}
                 </select>
                 <div className="mt-3">
-                    <p className="text-lg font-porter text-coffee-dark">{currentETF?.name}</p>
                     {etfInfo && (
-                        <div className="text-sm text-coffee-medium space-y-1">
+                        <div className="text-sm text-coffee-medium space-y-0 leading-snug">
                             {etfInfo.price && <p>Kurs: ${etfInfo.price.toFixed(2)}</p>}
                             <p>TER: {etfInfo.expenseRatio}</p>
                             <p>Dividende: {etfInfo.dividendYield}</p>
                         </div>
                     )}
-                    <p className="text-green-700 font-bold mt-1">
+                    <p className="text-green-700 font-bold mt-2">
                         ~{(currentAvgReturn * 100).toFixed(0)}% p.a. (historisch)
                     </p>
                 </div>

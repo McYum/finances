@@ -1,6 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 interface ETFPieChartProps {
     stockData: any[];
@@ -45,13 +46,13 @@ export function ETFPieChart({ stockData, formatCurrency }: ETFPieChartProps) {
                 <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 bg-[#e8d5c4] border-2 border-coffee-dark rounded"></div>
                     <span className="text-coffee-dark font-bold">
-                        {formatCurrency(invested)} selbst investiert
+                        <AnimatedNumber value={invested} formatValue={formatCurrency} /> selbst investiert
                     </span>
                 </div>
                 <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 bg-[#d4a373] border-2 border-coffee-dark rounded"></div>
                     <span className="text-coffee-dark font-bold">
-                        {formatCurrency(interest)} ZinesZins
+                        <AnimatedNumber value={interest} formatValue={formatCurrency} /> ZinesZins
                     </span>
                 </div>
             </div>

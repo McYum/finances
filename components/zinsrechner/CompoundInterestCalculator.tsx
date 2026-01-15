@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { TrendingUp, PiggyBank, Calculator } from "lucide-react";
 import { calculateCompoundInterest } from "@/lib/calculations";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 export function CompoundInterestCalculator() {
     const [initialCapital, setInitialCapital] = useState<string>("10000");
@@ -123,14 +124,20 @@ export function CompoundInterestCalculator() {
                         </div>
 
                         {result ? (
-                            <div className="space-y-6">
+                            <motion.div
+                                key={`${result.finalCapital}-${result.totalDeposited}-${result.totalInterest}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-6"
+                            >
                                 {/* Final capital */}
                                 <div className="bg-paper border-2 border-coffee-dark rounded-xl p-6">
                                     <div className="text-sm font-bold text-coffee-medium mb-2 uppercase tracking-wide">
                                         Endkapital
                                     </div>
                                     <div className="text-4xl font-porter text-coffee-dark">
-                                        {formatCurrency(result.finalCapital)}
+                                        <AnimatedNumber value={result.finalCapital} formatValue={formatCurrency} />
                                     </div>
                                 </div>
 
@@ -140,7 +147,7 @@ export function CompoundInterestCalculator() {
                                         Eingezahlt
                                     </div>
                                     <div className="text-2xl font-bold text-coffee-dark">
-                                        {formatCurrency(result.totalDeposited)}
+                                        <AnimatedNumber value={result.totalDeposited} formatValue={formatCurrency} />
                                     </div>
                                 </div>
 
@@ -153,7 +160,7 @@ export function CompoundInterestCalculator() {
                                         </div>
                                     </div>
                                     <div className="text-3xl font-porter text-green-700">
-                                        +{formatCurrency(result.totalInterest)}
+                                        +<AnimatedNumber value={result.totalInterest} formatValue={formatCurrency} />
                                     </div>
                                 </div>
 
@@ -167,7 +174,7 @@ export function CompoundInterestCalculator() {
                                         mehr als eingezahlt!
                                     </p>
                                 </div>
-                            </div>
+                            </motion.div>
                         ) : (
                             <div className="h-full flex items-center justify-center">
                                 <div className="text-center text-coffee-medium">
