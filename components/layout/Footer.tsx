@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-// Removed "default" here
 export function Footer() {
     return (
         <footer className="bg-[#1a1918] text-[#FDFCF8] py-12 px-6 border-t border-[#2D2A26]">

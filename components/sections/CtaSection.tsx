@@ -16,7 +16,7 @@ export function CtaSection() {
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 40 }, // Reduced y
+        hidden: { opacity: 0, y: 40 },
         visible: {
             opacity: 1,
             y: 0,

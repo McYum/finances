@@ -19,7 +19,7 @@ export const NumberTicker = memo(function NumberTicker({ value, className, prefi
 
     return <motion.span ref={ref} className={className}>{display}</motion.span>;
 }, (prev, next) => {
-    // Custom comparison - only re-render if value changes by more than 1
+    // Custom comparison only rerender if value changes by more than 1
     return Math.abs(prev.value - next.value) < 1 && prev.className === next.className && prev.prefix === next.prefix;
 });
 

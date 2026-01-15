@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { animated, useSpring } from "@react-spring/web";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Slide data ... (omitted for brevity, same as before)
+// Slide data
 const slides = [
   {
     title: "Sparen auf Autopilot",

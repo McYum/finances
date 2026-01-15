@@ -40,8 +40,6 @@ export default function RootLayout({
     return (
         <html lang="de">
         <body className={`${inter.variable} ${playfair.variable} ${porter.variable} font-sans antialiased`}>
-
-        {/* 2. HIER DEN WRAPPER DRUM LEGEN */}
         <SmoothScrolling>
             {children}
         </SmoothScrolling>
