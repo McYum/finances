@@ -3,7 +3,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { motion } from "framer-motion";
-import { StockCalculator } from "@/components/zinsrechner/StockCalculator";
+import { ETFCalculator } from "@/components/zinsrechner/ETFCalculator";
 import { CompoundInterestCalculator } from "@/components/zinsrechner/CompoundInterestCalculator";
 
 export default function ZinsrechnerPage() {
@@ -31,7 +31,7 @@ export default function ZinsrechnerPage() {
                 </div>
             </section>
 
-            <StockCalculator />
+            <ETFCalculator />
 
             <CompoundInterestCalculator />
 
