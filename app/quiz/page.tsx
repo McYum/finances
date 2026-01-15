@@ -9,7 +9,6 @@ import { RetroButton } from "@/components/ui/RetroButton";
 import { animated, useSpring } from "@react-spring/web";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import confetti from "canvas-confetti";
 
 // --- TYPES & DATA ---
 
@@ -119,8 +118,10 @@ function QuizNavButton({ direction, onClick, disabled }: { direction: "left" | "
 // --- UPDATED OPTION CARD ---
 function OptionCard({ text, selected, onClick }: { text: string; selected: boolean; onClick: () => void }) {
     return (
-        <motion.div
+        <motion.button
+            type="button"
             onClick={onClick}
+            aria-pressed={selected}
             // Tap animation: Subtle shrink
             whileTap={{ scale: 0.98 }}
 
@@ -129,10 +130,13 @@ function OptionCard({ text, selected, onClick }: { text: string; selected: boole
 
             className={cn(
                 // Base Layout: Added more padding (py-6, px-8) for larger touch area
-                "relative flex items-center gap-6 py-6 px-8 rounded-3xl border-4 cursor-pointer select-none w-full",
+                "relative flex items-center gap-6 py-6 px-8 rounded-3xl border-4 select-none w-full text-left",
 
                 // Color Transitions: Smooth fade instead of jumpy effects
                 "transition-colors duration-200",
+
+                // Focus styles for keyboard accessibility
+                "focus:outline-none focus:ring-4 focus:ring-coffee/50",
 
                 // --- STATE STYLES ---
                 selected
@@ -160,7 +164,7 @@ function OptionCard({ text, selected, onClick }: { text: string; selected: boole
             )}>
                 {text}
             </span>
-        </motion.div>
+        </motion.button>
     );
 }
 
@@ -205,7 +209,8 @@ export default function QuizPage() {
         return maxKey;
     };
 
-    const triggerFinancialConfetti = () => {
+    const triggerFinancialConfetti = async () => {
+        const confetti = (await import("canvas-confetti")).default;
         const duration = 3000;
         const animationEnd = Date.now() + duration;
         const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };

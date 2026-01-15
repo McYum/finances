@@ -12,7 +12,9 @@ export default function Home() {
         <main className="min-h-screen bg-paper overflow-x-hidden selection:bg-gold selection:text-coffee-dark">
             <Header/>
             <HeroSection/>
-            <StorySection/>
+            <div id="story">
+                <StorySection/>
+            </div>
 
             <div id="how-it-works">
                 <HowToSection/>

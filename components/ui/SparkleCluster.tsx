@@ -1,14 +1,14 @@
 import Image from "next/image";
-import { CSSProperties } from "react";
+import { CSSProperties, memo } from "react";
 
-export function SparkleCluster({ className, delay = 0 }: { className?: string; delay?: number }) {
+export const SparkleCluster = memo(function SparkleCluster({ className, delay = 0 }: { className?: string; delay?: number }) {
 
     const getStyle = (extraDelay: number): CSSProperties => ({
         animationDelay: `${delay + extraDelay}s`,
     });
 
     return (
-        <div className={`absolute ${className} pointer-events-none z-30`}>
+        <div className={`absolute ${className} pointer-events-none z-30 will-change-transform`}>
             <div className="relative w-20 h-20">
 
                 {/* GROSS */}
@@ -29,4 +29,4 @@ export function SparkleCluster({ className, delay = 0 }: { className?: string; d
             </div>
         </div>
     );
-}
+});

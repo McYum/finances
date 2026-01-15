@@ -1,19 +1,19 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { useSpring, animated } from "@react-spring/web";
+import { smoothScrollToElement } from "@/lib/smoothScroll";
 // HIER IMPORTIEREN:
 import { SparkleCluster } from "@/components/ui/SparkleCluster";
 
 export function HeroSection() {
-    // ... dein Code bleibt gleich, nur die function SparkleCluster oben löschen ...
-    // ... der Rest ist perfekt so wie du ihn hattest ...
     const float = useSpring({
         loop: true,
         from: { y: 0 },
         to: [{ y: -10 }, { y: 0 }],
-        config: { duration: 3000, easing: t => t }
+        config: { duration: 4000, tension: 280, friction: 60 }
     });
 
     return (
@@ -32,12 +32,17 @@ export function HeroSection() {
                         </span>
                         <span className="block text-4xl md:text-6xl lg:text-7xl mt-1 md:mt-2">100.000 € wert?</span>
                     </h1>
-                    <RetroButton className="mt-4">ZEIGE MIR WIE</RetroButton>
+                    <button
+                        onClick={() => smoothScrollToElement('#story', 80)}
+                        className="mt-4"
+                    >
+                        <RetroButton>ZEIGE MIR WIE</RetroButton>
+                    </button>
                 </div>
 
                 {/* Rechte Seite (Mascot) - unverändert lassen */}
-                <div className="relative flex justify-center md:justify-end mt-4 md:mt-12">
-                    <animated.div style={float} className="relative">
+                <div className="relative flex justify-center md:justify-end mt-4 md:mt-12 will-change-transform">
+                    <animated.div style={float} className="relative will-change-transform">
                         <SparkleCluster className="-top-2 -left--12" delay={0} />
                         <SparkleCluster className="top-1/3 -right-16" delay={1.5} />
                         <SparkleCluster className="bottom-40 -left-4" delay={0.8} />
