@@ -23,7 +23,7 @@ export const NumberTicker = memo(function NumberTicker({ value, className, prefi
     return Math.abs(prev.value - next.value) < 1 && prev.className === next.className && prev.prefix === next.prefix;
 });
 
-// Memoize the static positions to avoid recreation
+// Memorize the static positions to avoid recreation
 const STATIC_POSITIONS = Array.from({ length: 50 }).map(() => ({
     x: Math.random() * 80 + 10,
     y: Math.random() * 80 + 10,
@@ -31,30 +31,56 @@ const STATIC_POSITIONS = Array.from({ length: 50 }).map(() => ({
     delay: Math.random() * 0.3,
 }));
 
-export const CoinScatter = memo(function CoinScatter({
-                                                  count,
-                                                  className,
-                                                  coinSize = "w-6 h-6 md:w-8 md:h-8"
-                                              }: {
+type CoinScatterProps = {
     count: number;
     className?: string;
     coinSize?: string;
-}) {
+};
+
+export const CoinScatter = memo(function CoinScatter({
+    count,
+    className,
+    coinSize = "w-6 h-6 md:w-8 md:h-8",
+}: CoinScatterProps) {
     const safeCount = Math.min(count, 30);
-    const visibleCoins = useMemo(() => STATIC_POSITIONS.slice(0, safeCount), [safeCount]);
+
+    const visibleCoins = useMemo(
+        () => STATIC_POSITIONS.slice(0, safeCount),
+        [safeCount]
+    );
 
     return (
-        <div className={cn("absolute inset-0 pointer-events-none z-20 overflow-visible", className)}>
+        <div
+            className={cn(
+                "absolute inset-0 pointer-events-none z-20 overflow-visible",
+                className
+            )}
+        >
             {visibleCoins.map((pos, i) => (
                 <motion.div
                     key={i}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: pos.delay }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 200,
+                        damping: 20,
+                        delay: pos.delay,
+                    }}
                     className={cn("absolute will-change-transform", coinSize)}
-                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, rotate: `${pos.rotate}deg` }}
+                    style={{
+                        left: `${pos.x}%`,
+                        top: `${pos.y}%`,
+                        rotate: `${pos.rotate}deg`,
+                    }}
                 >
-                    <Image src="/images/story/coin.png" alt="Coin" fill className="object-contain drop-shadow-sm" sizes="48px" />
+                    <Image
+                        src="/images/story/coin.png"
+                        alt="Coin"
+                        fill
+                        className="object-contain drop-shadow-sm"
+                        sizes="48px"
+                    />
                 </motion.div>
             ))}
         </div>
