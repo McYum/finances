@@ -9,6 +9,7 @@ import { RetroButton } from "@/components/ui/RetroButton";
 import { animated, useSpring } from "@react-spring/web";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import {BackButton} from "@/components/ui/BackButton";
 
 // --- TYPES & DATA
 type ProfileType = "safety" | "balanced" | "risky" | "relaxed";
@@ -250,8 +251,8 @@ export default function QuizPage() {
     return (
         <main className="min-h-screen bg-paper flex flex-col">
             <Header />
-
-            <div className="flex-grow flex items-center justify-center pt-32 pb-20 px-4">
+            <BackButton />
+            <div className="flex-grow flex items-center justify-center pt-0 pb-20 px-4">
                 <div className="w-full max-w-5xl mx-auto">
 
                     {!isSubmitted ? (
