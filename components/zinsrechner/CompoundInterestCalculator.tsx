@@ -28,12 +28,63 @@ export function CompoundInterestCalculator() {
         setResult(calculatedResult);
     };
 
+    const getFontSizeClass = (value: number) => {
+        if (value >= 99999999) {
+            return "text-2xl";
+        }
+        return "text-3xl";
+    };
+
     const formatCurrency = (value: number) => {
+        const MAX_VALUE = 999999999999;
+        const isOverLimit = value > MAX_VALUE;
+        const clampedValue = Math.min(value, MAX_VALUE);
+
+        if (clampedValue >= 99999999) {
+            const formatted = new Intl.NumberFormat("de-DE", {
+                style: "currency",
+                currency: "EUR",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(Math.floor(clampedValue));
+
+            return isOverLimit ? `> ${formatted}` : formatted;
+        }
+
         return new Intl.NumberFormat("de-DE", {
             style: "currency",
             currency: "EUR",
-        }).format(value);
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(clampedValue);
     };
+
+    const formatInterest = (value: number) => {
+        const MAX_VALUE = 999999999999;
+        const isOverLimit = value > MAX_VALUE;
+        const clampedValue = Math.min(value, MAX_VALUE);
+
+        if (clampedValue >= 10000000) {
+            const formatted = new Intl.NumberFormat("de-DE", {
+                style: "currency",
+                currency: "EUR",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(Math.floor(clampedValue));
+
+            return isOverLimit ? `> +${formatted}` : `+${formatted}`;
+        }
+
+        const formatted = new Intl.NumberFormat("de-DE", {
+            style: "currency",
+            currency: "EUR",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(clampedValue);
+
+        return `+${formatted}`;
+    };
+
 
     return (
         <section className="py-16 pb-32 px-6">
@@ -136,7 +187,7 @@ export function CompoundInterestCalculator() {
                                     <div className="text-sm font-bold text-coffee-medium mb-2 uppercase tracking-wide">
                                         Endkapital
                                     </div>
-                                    <div className="text-4xl font-porter text-coffee-dark">
+                                    <div className={`${getFontSizeClass(result.finalCapital)} font-porter text-coffee-dark`}>
                                         <AnimatedNumber value={result.finalCapital} formatValue={formatCurrency} />
                                     </div>
                                 </div>
@@ -146,7 +197,7 @@ export function CompoundInterestCalculator() {
                                     <div className="text-sm font-bold text-coffee-medium mb-2 uppercase tracking-wide">
                                         Eingezahlt
                                     </div>
-                                    <div className="text-2xl font-bold text-coffee-dark">
+                                    <div className={`${getFontSizeClass(result.totalDeposited)} font-bold text-coffee-dark`}>
                                         <AnimatedNumber value={result.totalDeposited} formatValue={formatCurrency} />
                                     </div>
                                 </div>
@@ -159,8 +210,8 @@ export function CompoundInterestCalculator() {
                                             Gewinn durch Zinsen
                                         </div>
                                     </div>
-                                    <div className="text-3xl font-porter text-green-700">
-                                        +<AnimatedNumber value={result.totalInterest} formatValue={formatCurrency} />
+                                    <div className={`${getFontSizeClass(result.totalInterest)} font-porter text-green-700`}>
+                                        <AnimatedNumber value={result.totalInterest} formatValue={formatInterest} />
                                     </div>
                                 </div>
 
