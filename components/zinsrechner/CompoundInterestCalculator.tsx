@@ -109,6 +109,7 @@ export function CompoundInterestCalculator() {
                                 </label>
                                 <input
                                     type="number"
+                                    step="100"
                                     value={initialCapital}
                                     onChange={(e) => setInitialCapital(e.target.value)}
                                     className="w-full px-4 py-3 border-2 border-coffee-dark rounded-xl bg-paper text-coffee-dark font-semibold focus:outline-none focus:ring-2 focus:ring-gold"
@@ -122,6 +123,7 @@ export function CompoundInterestCalculator() {
                                 </label>
                                 <input
                                     type="number"
+                                    step="10"
                                     value={monthlyDeposit}
                                     onChange={(e) => setMonthlyDeposit(e.target.value)}
                                     className="w-full px-4 py-3 border-2 border-coffee-dark rounded-xl bg-paper text-coffee-dark font-semibold focus:outline-none focus:ring-2 focus:ring-gold"
