@@ -203,7 +203,6 @@ export function ETFCalculator() {
                         </div>
                     </div>
 
-                    {/* Info notice */}
                     <div className="mt-4 p-3 bg-cream/50 border-2 border-coffee-dark/20 rounded-xl">
                         <p className="text-sm text-coffee-medium text-center">
                             <span className="font-bold">Hinweis:</span> Diese Simulation zeigt, was passiert <span className="font-bold">wäre</span>, wenn du vor {selectedYears} Jahren angefangen hättest, monatlich dein Kaffee-Geld in den {currentETF?.symbol} ETF zu investieren (basierend auf ~{(currentAvgReturn * 100).toFixed(0)}% p.a. Durchschnittsrendite).
