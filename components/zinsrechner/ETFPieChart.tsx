@@ -20,7 +20,7 @@ export function ETFPieChart({ stockData, formatCurrency }: ETFPieChartProps) {
 
     return (
         <>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                     <Pie
                         data={[
@@ -29,8 +29,8 @@ export function ETFPieChart({ stockData, formatCurrency }: ETFPieChartProps) {
                         ]}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
+                        innerRadius={50}
+                        outerRadius={85}
                         paddingAngle={0}
                         dataKey="value"
                         startAngle={90}

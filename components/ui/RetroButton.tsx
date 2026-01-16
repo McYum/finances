@@ -38,7 +38,7 @@ export function RetroButton({ className, children, style, ...props }: RetroButto
 
             className={cn(
                 "relative font-black uppercase tracking-wide text-[#3E2723]",
-                "text-lg md:text-xl px-10 py-4 rounded-full select-none", // select-none prevents marking text when spamming
+                "text-lg md:text-xl px-10 py-4 rounded-full select-none cursor-pointer",
                 "border-[3px] border-[#3E2723]",
 
                 // Backgr Gradient

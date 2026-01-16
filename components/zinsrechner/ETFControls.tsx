@@ -33,13 +33,13 @@ export function ETFControls({
     formatCurrency
 }: ETFControlsProps) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* ETF selection */}
-            <div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* ETF selection - Left column */}
+            <div className="flex flex-col">
                 <select
                     value={selectedETF}
                     onChange={(e) => setSelectedETF(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-coffee-dark rounded-xl bg-cream text-coffee-dark font-semibold focus:outline-none focus:ring-2 focus:ring-gold cursor-pointer"
+                    className="h-[46px] px-4 text-sm border-2 border-coffee-dark rounded-xl bg-cream text-coffee-dark font-semibold focus:outline-none focus:ring-2 focus:ring-gold cursor-pointer"
                 >
                     {availableETFs.map((etf) => (
                         <option key={etf.symbol} value={etf.symbol}>
@@ -47,46 +47,52 @@ export function ETFControls({
                         </option>
                     ))}
                 </select>
-                <div className="mt-3">
-                    {etfInfo && (
-                        <div className="text-sm text-coffee-medium space-y-0 leading-snug">
-                            {etfInfo.price && <p>Kurs: ${etfInfo.price.toFixed(2)}</p>}
-                            <p>TER: {etfInfo.expenseRatio}</p>
-                            <p>Dividende: {etfInfo.dividendYield}</p>
-                        </div>
-                    )}
-                    <p className="text-green-700 font-bold mt-2">
-                        ~{(currentAvgReturn * 100).toFixed(0)}% p.a. (historisch)
-                    </p>
+                {etfInfo && (
+                    <div className="text-xs text-coffee-medium space-y-0 leading-tight mt-2 pl-2">
+                        {etfInfo.price && <p>Kurs: ${etfInfo.price.toFixed(2)}</p>}
+                        <p>TER: {etfInfo.expenseRatio}</p>
+                        <p>Dividende: {etfInfo.dividendYield}</p>
+                        <p className="text-green-700 font-bold mt-1">
+                            ~{(currentAvgReturn * 100).toFixed(0)}% p.a. (historisch)
+                        </p>
+                    </div>
+                )}
+            </div>
+
+            {/* Year buttons - Center column */}
+            <div className="flex flex-col">
+                <div className="flex items-center justify-center gap-2 h-[46px]">
+                    {[20, 30, 40].map((year) => (
+                        <YearButton
+                            key={year}
+                            year={year}
+                            isSelected={selectedYears === year}
+                            onClick={() => setSelectedYears(year)}
+                        />
+                    ))}
                 </div>
             </div>
 
-            {/* Year buttons */}
-            <div className="flex items-center justify-center gap-3">
-                {[20, 30, 40].map((year) => (
-                    <YearButton
-                        key={year}
-                        year={year}
-                        isSelected={selectedYears === year}
-                        onClick={() => setSelectedYears(year)}
+            {/* Coffee slider - Right column */}
+            <div className="flex flex-col">
+                <div className="flex items-center h-[46px]">
+                    <CoffeeSlider
+                        value={coffeesPerWeek}
+                        onChange={setCoffeesPerWeek}
                     />
-                ))}
-            </div>
-
-            {/* Coffee slider */}
-            <div>
-                <label className="block text-lg font-bold text-coffee-dark mb-4 text-center">
-                    Tassen Kaffee pro Woche
-                </label>
-                <CoffeeSlider
-                    value={coffeesPerWeek}
-                    onChange={setCoffeesPerWeek}
-                />
-                <p className="text-sm text-coffee-medium text-center mt-4">
-                    = {formatCurrency(yearlyInvestment)} / Jahr
+                </div>
+                <p className="text-xs text-coffee-medium text-center mt-2">
+                    ☕ {coffeesPerWeek} Kaffee pro Woche = {formatCurrency(yearlyInvestment)} / Jahr
                 </p>
             </div>
         </div>
     );
 }
+
+
+
+
+
+
+
 

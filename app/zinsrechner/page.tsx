@@ -35,32 +35,6 @@ export default function ZinsrechnerPage() {
 
             <CompoundInterestCalculator />
 
-            {/* Info Section */}
-            <section className="py-16 px-6 bg-cream/50">
-                <div className="max-w-7xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.6 }}
-                        className="bg-paper border-2 border-coffee-dark rounded-2xl p-8 shadow-[4px_4px_0px_0px_rgba(45,27,14,0.2)]"
-                    >
-                        <h3 className="text-2xl font-porter text-coffee-dark mb-4">
-                            Was ist der Zinseszins-Effekt?
-                        </h3>
-                        <p className="text-coffee-medium leading-relaxed mb-4">
-                            Der Zinseszins-Effekt beschreibt das exponentielle Wachstum deines Kapitals. Du erhältst
-                            nicht nur Zinsen auf dein eingezahltes Geld, sondern auch Zinsen auf die bereits
-                            erhaltenen Zinsen!
-                        </p>
-                        <p className="text-coffee-medium leading-relaxed">
-                            Je länger du sparst, desto stärker wird dieser Effekt. Deshalb lohnt es sich, früh
-                            anzufangen – selbst mit kleinen Beträgen. Zeit ist beim Vermögensaufbau dein bester
-                            Freund!
-                        </p>
-                    </motion.div>
-                </div>
-            </section>
-
             <Footer />
         </main>
     );

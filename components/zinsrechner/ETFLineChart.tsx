@@ -12,7 +12,7 @@ interface ETFLineChartProps {
 export function ETFLineChart({ loading, stockData, formatCurrency }: ETFLineChartProps) {
     if (loading) {
         return (
-            <div className="h-96 flex items-center justify-center">
+            <div className="h-80 flex items-center justify-center">
                 <div className="text-coffee-medium text-lg">Lade Daten...</div>
             </div>
         );
@@ -20,7 +20,7 @@ export function ETFLineChart({ loading, stockData, formatCurrency }: ETFLineChar
 
     if (stockData.length === 0) {
         return (
-            <div className="h-96 flex items-center justify-center">
+            <div className="h-80 flex items-center justify-center">
                 <div className="text-center text-coffee-medium">
                     <LineChartIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p className="text-lg">Keine Daten verfügbar</p>
@@ -30,7 +30,7 @@ export function ETFLineChart({ loading, stockData, formatCurrency }: ETFLineChar
     }
 
     return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={320}>
             <LineChart data={stockData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#d4a373" opacity={0.3} />
                 <XAxis

@@ -226,23 +226,23 @@ export default function QuizPage() {
 
     const questionVariants = {
         enter: (dir: number) => ({
-            x: dir > 0 ? 50 : -50, // Reduced offset for subtle slide
+            x: dir > 0 ? 50 : -50,
             opacity: 0,
         }),
         center: {
             x: 0,
             opacity: 1,
             transition: {
-                duration: 0.3, // Fast transition
-                ease: "easeOut"
+                duration: 0.3,
+                ease: [0.4, 0, 0.2, 1] as const
             }
         },
         exit: (dir: number) => ({
             x: dir < 0 ? 50 : -50,
             opacity: 0,
             transition: {
-                duration: 0.2, // Very fast exit
-                ease: "easeIn"
+                duration: 0.2,
+                ease: [0.4, 0, 1, 1] as const
             }
         })
     };

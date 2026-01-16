@@ -129,15 +129,15 @@ export function ETFCalculator() {
     };
 
     return (
-        <section className="py-16 px-6">
-            <div className="max-w-7xl mx-auto">
+        <section className="pb-12 px-6">
+            <div className="max-w-6xl mx-auto">
                 <APIStatusBanner apiStatus={apiStatus} usingMockData={usingMockData} />
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
-                    className="bg-paper border-2 border-coffee-dark rounded-2xl p-8 shadow-[6px_6px_0px_0px_rgba(45,27,14,0.3)]"
+                    className="bg-paper border-2 border-coffee-dark rounded-2xl p-6 shadow-[6px_6px_0px_0px_rgba(45,27,14,0.3)]"
                 >
                     <ETFControls
                         selectedETF={selectedETF}
@@ -154,7 +154,7 @@ export function ETFCalculator() {
                         formatCurrency={formatCurrency}
                     />
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2">
                             <ETFLineChart
                                 loading={loading}
@@ -172,7 +172,7 @@ export function ETFCalculator() {
                     </div>
 
                     {/* Info notice */}
-                    <div className="mt-6 p-4 bg-cream/50 border-2 border-coffee-dark/20 rounded-xl">
+                    <div className="mt-4 p-3 bg-cream/50 border-2 border-coffee-dark/20 rounded-xl">
                         <p className="text-sm text-coffee-medium text-center">
                             <span className="font-bold">Hinweis:</span> Diese Simulation zeigt, was passiert <span className="font-bold">wäre</span>, wenn du vor {selectedYears} Jahren angefangen hättest, monatlich dein Kaffee-Geld in den {currentETF?.symbol} ETF zu investieren (basierend auf ~{(currentAvgReturn * 100).toFixed(0)}% p.a. Durchschnittsrendite).
                         </p>

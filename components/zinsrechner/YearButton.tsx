@@ -27,7 +27,7 @@ export function YearButton({ year, isSelected, onClick }: YearButtonProps) {
             onMouseDown={() => setIsPressed(true)}
             onMouseUp={() => setIsPressed(false)}
             style={springStyles}
-            className={`px-6 py-3 border-2 border-coffee-dark rounded-xl font-bold transition-colors duration-200 ${
+            className={`px-5 py-3 border-2 border-coffee-dark rounded-xl font-bold transition-colors duration-200 cursor-pointer text-sm ${
                 isSelected
                     ? 'bg-gold text-coffee-dark shadow-[3px_3px_0px_0px_rgba(45,27,14,0.5)]'
                     : 'bg-cream text-coffee-dark shadow-[3px_3px_0px_0px_rgba(45,27,14,0.3)]'

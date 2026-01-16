@@ -31,17 +31,17 @@ export function CoffeeSlider({ value, onChange }: CoffeeSliderProps) {
                 style={{ width: `${progress}%` }}
             />
 
-            {/* Thumb with value display */}
+            {/* Thumb with value */}
             <animated.div
                 style={{
                     ...thumbSpring,
                     left: `calc(${progress}% - 20px)`,
                 }}
-                className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-coffee-dark rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg border-2 border-paper"
+                className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-coffee-dark rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg border-2 border-paper select-none"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <span className="text-paper font-bold text-lg">{value}</span>
+                <span className="text-paper font-bold text-lg pointer-events-none select-none">{value}</span>
             </animated.div>
 
             {/* Hidden input for actual interaction */}
