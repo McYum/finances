@@ -14,7 +14,7 @@ export function APIStatusBanner({ apiStatus, usingMockData }: APIStatusBannerPro
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-green-100 border-2 border-green-500 rounded-xl flex items-center gap-3"
+                className="mt-4 p-3 bg-green-100 border-2 border-green-500 rounded-xl flex items-center gap-3"
             >
                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                 <p className="text-sm text-green-800">
@@ -29,7 +29,7 @@ export function APIStatusBanner({ apiStatus, usingMockData }: APIStatusBannerPro
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-amber-100 border-2 border-amber-500 rounded-xl flex items-center gap-3"
+                className="mt-4 p-3 bg-amber-100 border-2 border-amber-500 rounded-xl flex items-center gap-3"
             >
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 <p className="text-sm text-amber-800">
@@ -39,6 +39,14 @@ export function APIStatusBanner({ apiStatus, usingMockData }: APIStatusBannerPro
         );
     }
 
-    return null;
+
+    return (
+        <div className="mt-4 p-3 border-2 border-transparent rounded-xl invisible" aria-hidden="true">
+            <div className="flex items-center gap-3">
+                <div className="w-5 h-5 flex-shrink-0"></div>
+                <p className="text-sm">Placeholder</p>
+            </div>
+        </div>
+    );
 }
 

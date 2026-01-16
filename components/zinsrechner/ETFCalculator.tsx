@@ -11,7 +11,9 @@ import {
     AVAILABLE_ETFS,
     MOCK_ETF_DATA,
     COFFEE_PRICE,
-    WEEKS_PER_YEAR
+    WEEKS_PER_YEAR,
+    ALPHA_VANTAGE_API_KEY,  // Dont delete
+    ALPHA_VANTAGE_BASE_URL  // Dont delete
 } from "@/constants/stocks";
 
 export function ETFCalculator() {
@@ -37,7 +39,7 @@ export function ETFCalculator() {
         setApiStatus('loading');
 
         /*
-        // Real API - commented to preserve API calls during development/demo
+        // API Call
         try {
             const apiUrl = `${ALPHA_VANTAGE_BASE_URL}?function=ETF_PROFILE&symbol=${selectedETF}&apikey=${ALPHA_VANTAGE_API_KEY}`;
             console.log("Fetching ETF data from API:", apiUrl);
@@ -45,27 +47,59 @@ export function ETFCalculator() {
             const response = await fetch(apiUrl);
             const data = await response.json();
 
-            console.log("API Response:", data);
+            console.log("Full API Response:", JSON.stringify(data, null, 2));
+            console.log("Response keys:", Object.keys(data));
 
-            // Check for API limit/error
-            if (data["Note"] || data["Information"] || data["Error Message"]) {
-                console.warn("API limit or error:", data["Note"] || data["Information"] || data["Error Message"]);
-                throw new Error("API limit reached or error");
+            // Check for API limit/error messages
+            if (data["Note"]) {
+                console.warn("API Note:", data["Note"]);
+                throw new Error("API limit reached");
+            }
+
+            if (data["Information"]) {
+                console.warn("API Information:", data["Information"]);
+                throw new Error("API information message received");
+            }
+
+            if (data["Error Message"]) {
+                console.warn("API Error:", data["Error Message"]);
+                throw new Error("API error message received");
             }
 
             if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
-                console.warn("Empty API response");
+                console.warn("Empty or invalid API response");
                 throw new Error("Empty API response");
             }
 
-            // Parse API data
-            console.log("Valid API data received");
+            const extractField = (fieldNames: string[]) => {
+                for (const name of fieldNames) {
+                    if (data[name]) return data[name];
+                }
+                return "N/A";
+            };
+
+            console.log("Valid API response received, extracting data...");
+
             setEtfInfo({
-                symbol: selectedETF,
-                expenseRatio: data.expense_ratio || "N/A",
-                dividendYield: data.dividend_yield || "N/A",
-                inceptionDate: data.inception_date || "N/A",
-                netAssets: data.net_assets || "N/A"
+                symbol: extractField(["symbol", "Symbol", "SYMBOL"]) !== "N/A"
+                    ? extractField(["symbol", "Symbol", "SYMBOL"])
+                    : selectedETF,
+                expenseRatio: extractField([
+                    "expense_ratio", "expenseRatio", "Expense Ratio",
+                    "EXPENSE_RATIO", "expense ratio"
+                ]),
+                dividendYield: extractField([
+                    "dividend_yield", "dividendYield", "Dividend Yield",
+                    "DIVIDEND_YIELD", "dividend yield"
+                ]),
+                inceptionDate: extractField([
+                    "inception_date", "inceptionDate", "Inception Date",
+                    "INCEPTION_DATE", "inception date"
+                ]),
+                netAssets: extractField([
+                    "net_assets", "netAssets", "Net Assets",
+                    "NET_ASSETS", "net assets", "aum", "AUM"
+                ])
             });
 
             setUsingMockData(false);
@@ -88,8 +122,8 @@ export function ETFCalculator() {
         }
         */
 
-        // Mock data mode (for development/demo)
-        console.log("Loading demo data for:", selectedETF);
+        // Fallback to mock data
+        console.log("→ Loading demo data for:", selectedETF);
         await new Promise(resolve => setTimeout(resolve, 300));
         loadMockData();
         setLoading(false);
@@ -129,10 +163,8 @@ export function ETFCalculator() {
     };
 
     return (
-        <section className="pb-12 px-6">
+        <section className="px-6">
             <div className="max-w-6xl mx-auto">
-                <APIStatusBanner apiStatus={apiStatus} usingMockData={usingMockData} />
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -178,6 +210,8 @@ export function ETFCalculator() {
                         </p>
                     </div>
                 </motion.div>
+
+                <APIStatusBanner apiStatus={apiStatus} usingMockData={usingMockData} />
             </div>
         </section>
     );
