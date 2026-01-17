@@ -51,8 +51,8 @@ export function SmoothScrolling({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <ReactLenis root options={options} ref={lenisRef}>
-            {children}
+        <ReactLenis root options={options} ref={lenisRef as any}>
+            {children as any}
         </ReactLenis>
     );
 }

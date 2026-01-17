@@ -26,7 +26,7 @@ const LAYOUT_CONFIG = {
     },
     // Scroll animation
     scroll: {
-        offset: ["start 80%", "end 20%"],
+        offset: ["start 80%", "end 20%"] as const,
         clipPathRange: [0, 0.9],
         clipPathValues: ["inset(0 0 100% 0)", "inset(0 0 0% 0)"]
     },
@@ -102,21 +102,19 @@ export function StorySection() {
     // Memoize scroll config
     const scrollConfig = useMemo(() => ({
         target: containerRef,
-        offset: LAYOUT_CONFIG.scroll.offset
+        offset: LAYOUT_CONFIG.scroll.offset as any
     }), []);
 
     const { scrollYProgress } = useScroll(scrollConfig);
 
-    const smoothScroll = useSpring(scrollYProgress, {
-        ...LAYOUT_CONFIG.springs.smooth,
-        clamp: true
+    const smoothScroll = useSpring(scrollYProgress as any, {
+        ...LAYOUT_CONFIG.springs.smooth
     });
 
-    const pathClip = useTransform(smoothScroll, [LAYOUT_CONFIG.scroll.clipPathRange[0], LAYOUT_CONFIG.scroll.clipPathRange[1]], LAYOUT_CONFIG.scroll.clipPathValues);
+    const pathClip = useTransform(smoothScroll as any, [LAYOUT_CONFIG.scroll.clipPathRange[0], LAYOUT_CONFIG.scroll.clipPathRange[1]], LAYOUT_CONFIG.scroll.clipPathValues);
 
     const smoothSavings = useSpring(displayValue, { 
-        ...LAYOUT_CONFIG.springs.savings,
-        clamp: true
+        ...LAYOUT_CONFIG.springs.savings
     });
     useEffect(() => { smoothSavings.set(displayValue); }, [displayValue, smoothSavings]);
 

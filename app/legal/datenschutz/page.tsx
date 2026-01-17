@@ -5,11 +5,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ChevronLeft } from "lucide-react";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Datenschutz | Coffee4Money",
-};
 
 export default function DatenschutzPage() {
     return (

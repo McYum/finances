@@ -5,12 +5,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ChevronLeft } from "lucide-react";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Impressum | Coffee4Money",
-    description: "Legal notice for Coffee4Money",
-};
 
 export default function ImpressumPage() {
     return (
