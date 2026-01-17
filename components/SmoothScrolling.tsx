@@ -1,12 +1,14 @@
 "use client";
 
 import { ReactLenis } from "@studio-freight/react-lenis";
-import { useEffect, useRef } from "react";
-import type Lenis from "lenis";
+import { useEffect, useRef, type ReactNode } from "react";
 
-export function SmoothScrolling({ children }: { children: React.ReactNode }) {
+interface SmoothScrollingProps {
+    children: ReactNode;
+}
 
-    const lenisRef = useRef<Lenis | null>(null);
+export function SmoothScrolling({ children }: SmoothScrollingProps) {
+    const lenisRef = useRef<any>(null);
 
     // Physics config
     const options = {
@@ -18,13 +20,11 @@ export function SmoothScrolling({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const onClick = (e: MouseEvent) => {
-            // 1. Did header or button alr handle it? Cancel
             if (e.defaultPrevented) return;
 
             const target = e.target as HTMLElement | null;
             if (!target) return;
 
-            // Search for link
             const link = target.closest('a[href^="#"]') as HTMLAnchorElement | null;
             if (!link) return;
 
@@ -37,11 +37,9 @@ export function SmoothScrolling({ children }: { children: React.ReactNode }) {
 
             e.preventDefault();
 
-            // Safety Check lenis ready?
-            if (lenisRef.current) {
-                lenisRef.current.scrollTo(el, { offset: -120, duration: 1.5 });
+            if (lenisRef.current?.lenis) {
+                lenisRef.current.lenis.scrollTo(el, { offset: -120, duration: 1.5 });
             } else {
-                // Lenis not ready do a fallback
                 el.scrollIntoView({ behavior: 'smooth' });
             }
         };
@@ -52,7 +50,7 @@ export function SmoothScrolling({ children }: { children: React.ReactNode }) {
 
     return (
         <ReactLenis root options={options} ref={lenisRef}>
-            {children}
+            {children as any}
         </ReactLenis>
     );
 }
