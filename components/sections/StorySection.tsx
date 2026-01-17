@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, memo, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { motion, useSpring, useTransform, useInView, useScroll } from "framer-motion";
+import { motion, useSpring, useTransform, useScroll } from "framer-motion";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { SparkleCluster } from "@/components/ui/SparkleCluster";
-import { cn } from "@/lib/utils";
 import { useInterestCalculator } from "@/lib/hooks/useInterestCalculator";
 import { NumberTicker, CoinScatter } from "@/components/story/StoryComponents";
 import { smoothScrollToElement } from "@/lib/smoothScroll";
@@ -99,26 +98,25 @@ export function StorySection() {
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLElement>(null);
 
-    // Memoize scroll config
-    const scrollConfig = useMemo(() => ({
+    const { scrollYProgress } = useScroll({
         target: containerRef,
-        offset: LAYOUT_CONFIG.scroll.offset
-    }), []);
-
-    const { scrollYProgress } = useScroll(scrollConfig);
-
-    const smoothScroll = useSpring(scrollYProgress, {
-        ...LAYOUT_CONFIG.springs.smooth,
-        clamp: true
+        offset: ["start 80%" as const, "end 20%" as const]
     });
 
-    const pathClip = useTransform(smoothScroll, [LAYOUT_CONFIG.scroll.clipPathRange[0], LAYOUT_CONFIG.scroll.clipPathRange[1]], LAYOUT_CONFIG.scroll.clipPathValues);
+    const pathClip = useTransform(
+        scrollYProgress,
+        [0, 0.9],
+        ["inset(0 0 100% 0)", "inset(0 0 0% 0)"]
+    );
 
     const smoothSavings = useSpring(displayValue, { 
-        ...LAYOUT_CONFIG.springs.savings,
-        clamp: true
+        stiffness: 150,
+        damping: 25
     });
-    useEffect(() => { smoothSavings.set(displayValue); }, [displayValue, smoothSavings]);
+
+    useEffect(() => {
+        smoothSavings.set(displayValue);
+    }, [displayValue, smoothSavings]);
 
     const sliderPercent = useTransform(smoothSavings, LAYOUT_CONFIG.motionRanges.sliderPercent, LAYOUT_CONFIG.motionRanges.sliderPercentValues);
     const potScale = useTransform(smoothSavings, LAYOUT_CONFIG.motionRanges.potScale, LAYOUT_CONFIG.motionRanges.potScaleValues);
