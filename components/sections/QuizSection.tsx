@@ -39,7 +39,6 @@ export function QuizSection() {
                             </h2>
                             <p className="text-2xl text-gray-600 mb-10">Mach eine schnelle Umfrage</p>
 
-                            {/* HIER IST DER LINK JETZT KORREKT */}
                             <Link href="/quiz">
                                 <RetroButton>PROBIER ES AUS!</RetroButton>
                             </Link>

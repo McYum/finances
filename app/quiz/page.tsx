@@ -9,10 +9,8 @@ import { RetroButton } from "@/components/ui/RetroButton";
 import { animated, useSpring } from "@react-spring/web";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import confetti from "canvas-confetti";
 
-// --- TYPES & DATA ---
-
+// --- TYPES & DATA
 type ProfileType = "safety" | "balanced" | "risky" | "relaxed";
 
 const PROFILES: Record<ProfileType, { title: string; desc: string; strategy: string }> = {
@@ -92,7 +90,6 @@ const QUESTIONS = [
 ];
 
 // --- HELPER COMPONENTS ---
-
 function QuizNavButton({ direction, onClick, disabled }: { direction: "left" | "right"; onClick: () => void; disabled?: boolean }) {
     const [isHovered, setIsHovered] = useState(false);
 
@@ -116,11 +113,12 @@ function QuizNavButton({ direction, onClick, disabled }: { direction: "left" | "
     );
 }
 
-// --- UPDATED OPTION CARD ---
 function OptionCard({ text, selected, onClick }: { text: string; selected: boolean; onClick: () => void }) {
     return (
-        <motion.div
+        <motion.button
+            type="button"
             onClick={onClick}
+            aria-pressed={selected}
             // Tap animation: Subtle shrink
             whileTap={{ scale: 0.98 }}
 
@@ -128,18 +126,13 @@ function OptionCard({ text, selected, onClick }: { text: string; selected: boole
             layout
 
             className={cn(
-                // Base Layout: Added more padding (py-6, px-8) for larger touch area
-                "relative flex items-center gap-6 py-6 px-8 rounded-3xl border-4 cursor-pointer select-none w-full",
-
-                // Color Transitions: Smooth fade instead of jumpy effects
+                "relative flex items-center gap-6 py-6 px-8 rounded-3xl border-4 select-none w-full text-left",
                 "transition-colors duration-200",
+                "focus:outline-none focus:ring-4 focus:ring-coffee/50",
 
-                // --- STATE STYLES ---
+                // --- STATE STYLES
                 selected
-                    // Selected: Dark frame, distinct background
                     ? "border-coffee-dark bg-[#F2EBE3]"
-                    // Default: Light frame, white/transparent bg
-                    // Hover: Slightly darker border and white bg to indicate interactivity
                     : "border-[#E5DACE] bg-white/60 hover:border-[#C6A992] hover:bg-white hover:shadow-sm"
             )}
         >
@@ -160,7 +153,7 @@ function OptionCard({ text, selected, onClick }: { text: string; selected: boole
             )}>
                 {text}
             </span>
-        </motion.div>
+        </motion.button>
     );
 }
 
@@ -205,7 +198,8 @@ export default function QuizPage() {
         return maxKey;
     };
 
-    const triggerFinancialConfetti = () => {
+    const triggerFinancialConfetti = async () => {
+        const confetti = (await import("canvas-confetti")).default;
         const duration = 3000;
         const animationEnd = Date.now() + duration;
         const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
@@ -230,8 +224,6 @@ export default function QuizPage() {
 
     const isComplete = Object.keys(answers).length === QUESTIONS.length;
 
-    // --- SMOOTH & FAST ANIMATION VARIANTS ---
-    // Removed rotation and large offsets for a cleaner, faster feel
     const questionVariants = {
         enter: (dir: number) => ({
             x: dir > 0 ? 50 : -50, // Reduced offset for subtle slide

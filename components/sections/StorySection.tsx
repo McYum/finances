@@ -1,111 +1,142 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { motion, useSpring, useTransform, useInView, useScroll } from "framer-motion";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { SparkleCluster } from "@/components/ui/SparkleCluster";
 import { cn } from "@/lib/utils";
+import { useInterestCalculator } from "@/lib/hooks/useInterestCalculator";
+import { NumberTicker, CoinScatter } from "@/components/story/StoryComponents";
+import { smoothScrollToElement } from "@/lib/smoothScroll";
 
-const CONFIG = {
-    pathImage: { x: 0, y: 0, scale: 1.0, opacity: 0.8 },
-    station1: { x: -400, y: 0 },
-    station2: { x: 0, y: 0 },
-    station3: { x: -50, y: 100 }
+const LAYOUT_CONFIG = {
+    // Path image styling
+    pathImage: { 
+        x: 0, 
+        y: 0, 
+        scale: 1.0, 
+        opacity: 0.8 
+    },
+    // Station positions
+    stations: {
+        station1: { x: -400, y: 0 },
+        station2: { x: 0, y: 0 },
+        station3: { x: -50, y: 100 }
+    },
+    // Scroll animation
+    scroll: {
+        offset: ["start 80%", "end 20%"],
+        clipPathRange: [0, 0.9],
+        clipPathValues: ["inset(0 0 100% 0)", "inset(0 0 0% 0)"]
+    },
+    // Spring animations
+    springs: {
+        smooth: { stiffness: 100, damping: 30, restDelta: 0.001 },
+        savings: { stiffness: 150, damping: 25 },
+        number: { mass: 0.5, stiffness: 75, damping: 15 }
+    },
+    // Motion ranges
+    motionRanges: {
+        slider: { min: 5, max: 100, step: 5 },
+        sliderPercent: [5, 100],
+        potScale: [5, 100],
+        sliderPercentValues: ["0%", "100%"],
+        potScaleValues: [1, 1.25]
+    },
+    // Bubble positioning
+    bubble: {
+        top: -25,
+        rightDesktop: 1,
+        rightMobile: "1/2",
+        translateX: 10,
+        width: { mobile: 160, desktop: 192 },
+        height: { mobile: 128, desktop: 160 }
+    },
+    // Mascot dimensions
+    mascot: {
+        width: { mobile: 192, desktop: 256 },
+        height: { mobile: 192, desktop: 256 }
+    },
+    // Money pot counter
+    potCounter: {
+        top: "1/2",
+        right: "-90%",
+        translateX: "-1/2",
+        translateY: "-1/2",
+        marginTop: 2
+    },
+    // Animations
+    animations: {
+        wateringCan: {
+            rotate: [20, 5, 20],
+            duration: 3,
+            top: 15,
+            left: -110
+        },
+        pulse: {
+            y: [0, 10, 0],
+            duration: 2
+        }
+    },
+    // Coin scatter positions
+    coinScatter: {
+        y15: { top: "3%", left: "15%", right: "25%", bottom: "60%" },
+        y30: { top: "1%", left: "25%", right: "35%", bottom: "40%" }
+    },
+    // Money tree scale
+    moneyTreeScale: 1.2,
+    // 30 years bottom panel
+    bottomPanel: {
+        bottom: "-25%"
+    }
 };
 
-const NumberTicker = memo(function NumberTicker({ value, className, prefix = "" }: { value: number, className?: string, prefix?: string }) {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: false, margin: "-20px" });
-    const spring = useSpring(0, { mass: 0.5, stiffness: 75, damping: 15 });
-    const display = useTransform(spring, (current) => `${prefix}${Math.round(current).toLocaleString('de-DE')}`);
-
-    useEffect(() => {
-        if (isInView) {
-            spring.set(value || 0);
-        } else {
-            spring.jump(0);
-        }
-    }, [isInView, value, spring]);
-
-    return <motion.span ref={ref} className={className}>{display}</motion.span>;
-});
-
-const STATIC_POSITIONS = Array.from({ length: 50 }).map(() => ({
-    x: Math.random() * 80 + 10,
-    y: Math.random() * 80 + 10,
-    rotate: Math.random() * 360,
-    delay: Math.random() * 0.3,
-}));
-
-const CoinScatter = memo(function CoinScatter({
-                                                  count,
-                                                  className,
-                                                  coinSize = "w-6 h-6 md:w-8 md:h-8"
-                                              }: {
-    count: number;
-    className?: string;
-    coinSize?: string;
-}) {
-    const safeCount = Math.min(count, 30);
-    const visibleCoins = STATIC_POSITIONS.slice(0, safeCount);
-
-    return (
-        <div className={cn("absolute inset-0 pointer-events-none z-20 overflow-visible", className)}>
-            {visibleCoins.map((pos, i) => (
-                <motion.div
-                    key={i}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: pos.delay }}
-                    className={cn("absolute will-change-transform", coinSize)}
-                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, rotate: `${pos.rotate}deg` }}
-                >
-                    <Image src="/images/story/coin.png" alt="Coin" fill className="object-contain drop-shadow-sm" sizes="48px" />
-                </motion.div>
-            ))}
-        </div>
-    );
-});
 
 export function StorySection() {
     const [weeklySavings, setWeeklySavings] = useState(25);
+    const [displayValue, setDisplayValue] = useState(25);
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLElement>(null);
 
-    const { scrollYProgress } = useScroll({
+    // Memoize scroll config
+    const scrollConfig = useMemo(() => ({
         target: containerRef,
-        offset: ["start 80%", "end 20%"]
-    });
+        offset: LAYOUT_CONFIG.scroll.offset
+    }), []);
+
+    const { scrollYProgress } = useScroll(scrollConfig);
 
     const smoothScroll = useSpring(scrollYProgress, {
-        stiffness: 100,
-        damping: 30,
-        restDelta: 0.001
+        ...LAYOUT_CONFIG.springs.smooth,
+        clamp: true
     });
 
-    const pathClip = useTransform(smoothScroll, [0, 0.9], ["inset(0 0 100% 0)", "inset(0 0 0% 0)"]);
+    const pathClip = useTransform(smoothScroll, [LAYOUT_CONFIG.scroll.clipPathRange[0], LAYOUT_CONFIG.scroll.clipPathRange[1]], LAYOUT_CONFIG.scroll.clipPathValues);
 
-    const smoothSavings = useSpring(25, { stiffness: 150, damping: 25 });
-    useEffect(() => { smoothSavings.set(weeklySavings); }, [weeklySavings, smoothSavings]);
+    const smoothSavings = useSpring(displayValue, { 
+        ...LAYOUT_CONFIG.springs.savings,
+        clamp: true
+    });
+    useEffect(() => { smoothSavings.set(displayValue); }, [displayValue, smoothSavings]);
 
-    const sliderPercent = useTransform(smoothSavings, [5, 100], ["0%", "100%"]);
-    const potScale = useTransform(smoothSavings, [5, 100], [1, 1.25]);
+    const sliderPercent = useTransform(smoothSavings, LAYOUT_CONFIG.motionRanges.sliderPercent, LAYOUT_CONFIG.motionRanges.sliderPercentValues);
+    const potScale = useTransform(smoothSavings, LAYOUT_CONFIG.motionRanges.potScale, LAYOUT_CONFIG.motionRanges.potScaleValues);
 
-    const stats = useMemo(() => {
-        const monthly = weeklySavings * 4.33;
-        const rate = 0.07;
-        const months15 = 15 * 12;
-        const months30 = 30 * 12;
-        const monthlyRate = rate / 12;
+    // Debounced slider handler
+    const handleSliderChange = useCallback((value: number) => {
+        setDisplayValue(value);
+        
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        
+        debounceTimerRef.current = setTimeout(() => {
+            setWeeklySavings(value);
+        }, 100);
+    }, []);
 
-        const calc = (m: number) => {
-            const fv = monthly * ((Math.pow(1 + monthlyRate, m) - 1) / monthlyRate);
-            const total = monthly * m;
-            return { fv, total, interest: fv - total };
-        };
-
-        return { y15: calc(months15), y30: calc(months30) };
-    }, [weeklySavings]);
+    const stats = useInterestCalculator(weeklySavings);
 
     return (
         <section ref={containerRef} className="relative pt-24 pb-96 bg-[#FFFBF5] overflow-visible">
@@ -125,8 +156,8 @@ export function StorySection() {
                     className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none hidden md:block will-change-transform"
                     style={{
                         clipPath: pathClip,
-                        opacity: CONFIG.pathImage.opacity,
-                        transform: `translate(${CONFIG.pathImage.x}px, ${CONFIG.pathImage.y}px) scale(${CONFIG.pathImage.scale})`
+                        opacity: LAYOUT_CONFIG.pathImage.opacity,
+                        transform: `translate(${LAYOUT_CONFIG.pathImage.x}px, ${LAYOUT_CONFIG.pathImage.y}px) scale(${LAYOUT_CONFIG.pathImage.scale})`
                     }}
                 >
                     <div className="relative w-full h-full">
@@ -135,8 +166,8 @@ export function StorySection() {
                 </motion.div>
 
                 <motion.div
-                    className="relative grid md:grid-cols-2 gap-12 items-center mb-48 z-10"
-                    style={{ x: CONFIG.station1.x, y: CONFIG.station1.y }}
+                    className="relative grid md:grid-cols-2 gap-12 items-center mb-48 z-10 will-change-transform"
+                    style={{ x: LAYOUT_CONFIG.stations.station1.x, y: LAYOUT_CONFIG.stations.station1.y }}
                 >
                     <motion.div
                         initial={{ x: -50, opacity: 0 }}
@@ -171,11 +202,11 @@ export function StorySection() {
                                 <Image src="/images/story/money_pot.png" alt="Pot" fill
                                        className="object-contain drop-shadow-xl"/>
 
-                                {/* IMPROVED MONEY COUNTER FRAME */}
+                                {/* MONEY COUNTER FRAME */}
                                 <div className="absolute top-1/2 right-[-90%] -translate-x-1/2 -translate-y-1/2 mt-2">
                                     <div
                                         className="text-3xl font-black text-coffee-dark bg-paper px-4 py-2 rounded-xl border-2 border-coffee-dark shadow-[4px_4px_0px_0px_#2D1B0E] flex items-baseline z-30">
-                                        <NumberTicker value={weeklySavings}/>
+                                        <NumberTicker value={displayValue}/>
                                         <span className="ml-1 text-2xl">€</span>
                                     </div>
                                 </div>
@@ -184,11 +215,11 @@ export function StorySection() {
                                 className="w-full bg-[#EFE6DD] p-5 rounded-2xl border-2 border-coffee-dark shadow-[4px_4px_0px_0px_#2D1B0E] relative touch-none">
                                 <input
                                     type="range"
-                                    min="5"
-                                    max="100"
-                                    step="5"
-                                    value={weeklySavings}
-                                    onChange={(e) => setWeeklySavings(Number(e.target.value))}
+                                    min={LAYOUT_CONFIG.motionRanges.slider.min.toString()}
+                                    max={LAYOUT_CONFIG.motionRanges.slider.max.toString()}
+                                    step={LAYOUT_CONFIG.motionRanges.slider.step.toString()}
+                                    value={displayValue}
+                                    onChange={(e) => handleSliderChange(Number(e.target.value))}
                                     className="absolute inset-0 z-30 w-full h-full opacity-0 cursor-pointer"
                                 />
                                 <div className="relative h-6 w-full flex items-center">
@@ -215,8 +246,8 @@ export function StorySection() {
                 </motion.div>
 
                 <motion.div
-                    className="relative grid md:grid-cols-2 gap-8 items-center mb-48 z-10"
-                    style={{x: CONFIG.station2.x, y: CONFIG.station2.y}}
+                    className="relative grid md:grid-cols-2 gap-8 items-center mb-48 z-10 will-change-transform"
+                    style={{x: LAYOUT_CONFIG.stations.station2.x, y: LAYOUT_CONFIG.stations.station2.y}}
                 >
                     <motion.div
                         initial={{x: -50, opacity: 0}}
@@ -232,7 +263,7 @@ export function StorySection() {
                             <SparkleCluster className="-top-4 -right-4"/>
                             <SparkleCluster className="bottom-1/3 -left-8" delay={1}/>
                             <div className="absolute top-[3%] left-[15%] right-[25%] bottom-[60%] z-10">
-                                <CoinScatter count={Math.floor(weeklySavings / 6)}/>
+                                <CoinScatter count={Math.floor(displayValue / 6)}/>
                             </div>
                         </motion.div>
 
@@ -260,8 +291,8 @@ export function StorySection() {
                     >
                         <div className="relative w-48 h-48 md:w-64 md:h-64 md:mt-24">
                             <motion.div
-                                animate={{ rotate: [20, 5, 20] }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                animate={{ rotate: LAYOUT_CONFIG.animations.wateringCan.rotate }}
+                                transition={{ duration: LAYOUT_CONFIG.animations.wateringCan.duration, repeat: Infinity, ease: "easeInOut" }}
                                 className="absolute top-15 left-[-110px] w-32 h-32 md:w-40 md:h-40 z-20"
                             >
                                 <Image src="/images/story/watering_can.png" alt="Can" fill className="object-contain" />
@@ -277,8 +308,8 @@ export function StorySection() {
                 </motion.div>
 
                 <motion.div
-                    className="relative flex flex-col items-center z-10"
-                    style={{x: CONFIG.station3.x, y: CONFIG.station3.y}}
+                    className="relative flex flex-col items-center z-10 will-change-transform"
+                    style={{x: LAYOUT_CONFIG.stations.station3.x, y: LAYOUT_CONFIG.stations.station3.y}}
                 >
                     <motion.div
                         initial={{scale: 0.8, opacity: 0}}
@@ -291,11 +322,11 @@ export function StorySection() {
                             In 30 Jahren
                         </h3>
 
-                        <div className="relative w-full h-full" style={{ transform: "scale(1.2)", transformOrigin: "bottom center" }}>
+                        <div className="relative w-full h-full" style={{ transform: `scale(${LAYOUT_CONFIG.moneyTreeScale})`, transformOrigin: "bottom center" }}>
                             <Image src="/images/story/money_tree.png" alt="Tree" fill className="object-contain z-10" />
                             <div className="absolute top-[1%] left-[25%] right-[35%] bottom-[40%] z-10">
                                 <CoinScatter
-                                    count={Math.floor(weeklySavings * 1.5)}
+                                    count={Math.floor(displayValue * 1.5)}
                                     coinSize="w-8 h-8 md:w-10 md:h-10"
                                 />
                             </div>
@@ -315,16 +346,20 @@ export function StorySection() {
 
                     <div className="mt-32 flex flex-col items-center gap-6 relative z-30">
                         <motion.div
-                            animate={{y: [0, 10, 0]}}
-                            transition={{repeat: Infinity, duration: 2}}
+                            animate={{y: LAYOUT_CONFIG.animations.pulse.y}}
+                            transition={{repeat: Infinity, duration: LAYOUT_CONFIG.animations.pulse.duration}}
                             className="text-gold text-4xl"
                         >
                             ⬇
                         </motion.div>
-                        <RetroButton
-                            className="text-xl md:text-2xl px-12 py-5 shadow-[inset_0px_-6px_0px_0px_#DFA339,0px_10px_20px_rgba(0,0,0,0.2)]">
-                            MEINEN SPARPLAN <br className="md:hidden"/> JETZT STARTEN
-                        </RetroButton>
+                        <button
+                            onClick={() => smoothScrollToElement('#how-it-works', 80)}
+                            className="text-xl md:text-2xl px-12 py-5"
+                        >
+                            <RetroButton className="text-xl md:text-2xl px-12 py-5 shadow-[inset_0px_-6px_0px_0px_#DFA339,0px_10px_20px_rgba(0,0,0,0.2)]">
+                                MEINEN SPARPLAN <br className="md:hidden"/> JETZT STARTEN
+                            </RetroButton>
+                        </button>
                         <motion.div
                             initial={{y: 20, opacity: 0}}
                             whileInView={{y: 0, opacity: 1}}

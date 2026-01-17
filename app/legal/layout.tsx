@@ -9,20 +9,18 @@ export default function LegalLayout({
 }) {
     return (
         <div className="min-h-screen bg-[#FDFCF8] flex flex-col font-sans selection:bg-[#FFD700] selection:text-[#2D2A26]">
-            {/* Header bleibt oben fest */}
             <Header />
 
-            {/* Hauptbereich mit Animation */}
+            {/* Main area with animation */}
             <main className="flex-grow pt-32 pb-20 px-6 relative z-10">
                 <div className="max-w-3xl mx-auto">
-                    {/* Hier wird die animierte Karte geladen */}
+                    {/* Load animated card */}
                     <AnimatedLegalCard>
                         {children}
                     </AnimatedLegalCard>
                 </div>
             </main>
 
-            {/* Footer schließt die Seite ab */}
             <Footer />
         </div>
     );

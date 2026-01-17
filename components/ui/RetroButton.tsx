@@ -12,13 +12,12 @@ export function RetroButton({ className, children, style, ...props }: RetroButto
     const [isHovered, setIsHovered] = useState(false);
     const [isPressed, setIsPressed] = useState(false);
 
-    // Die Physik-Animation definieren
     const { scale, rotation, y } = useSpring({
-        scale: isPressed ? 0.95 : isHovered ? 1.05 : 1, // Drücken: klein, Hover: groß, Sonst: normal
-        rotation: isHovered ? -1 : 0, // Beim Hovern ganz leicht kippen
-        y: isPressed ? 2 : 0, // Beim Drücken physisch nach unten bewegen
+        scale: isPressed ? 0.95 : isHovered ? 1.05 : 1, // Push: small, Hover: big, Sonst: normal
+        rotation: isHovered ? -1 : 0, // Rotate on hover
+        y: isPressed ? 2 : 0, // On click move down
 
-        // Wobbly Config: Fühlt sich an wie Wackelpudding/Gummi
+        // Wobbly Config
         config: { tension: 300, friction: 10 },
     });
 
@@ -29,7 +28,7 @@ export function RetroButton({ className, children, style, ...props }: RetroButto
             onMouseDown={() => setIsPressed(true)}
             onMouseUp={() => setIsPressed(false)}
 
-            // Hier verbinden wir die Spring-Werte mit dem Style
+            // Connect Spring vals
             style={{
                 transform: scale.to(s => `scale(${s})`),
                 rotate: rotation.to(r => `${r}deg`),
@@ -39,16 +38,16 @@ export function RetroButton({ className, children, style, ...props }: RetroButto
 
             className={cn(
                 "relative font-black uppercase tracking-wide text-[#3E2723]",
-                "text-lg md:text-xl px-10 py-4 rounded-full select-none", // select-none verhindert Textmarkieren beim schnellen Klicken
+                "text-lg md:text-xl px-10 py-4 rounded-full select-none", // select-none prevents marking text when spamming
                 "border-[3px] border-[#3E2723]",
 
-                // Hintergrund Gradient
+                // Backgr Gradient
                 "bg-gradient-to-b from-[#FFF2C2] to-[#FFC850]",
 
-                // Schatten (Inset + Drop Shadow) - WICHTIG: Keine CSS Transitions hier, das macht Spring!
+                // (Inset + Drop Shadow)
                 "shadow-[inset_0px_-6px_0px_0px_#DFA339,0px_5px_15px_rgba(0,0,0,0.15)]",
 
-                // Wenn man klickt, ändern wir den Schatten manuell (Spring macht Scale/Y, CSS macht Schatten)
+                // Change shadow manually on click
                 isPressed ? "shadow-[inset_0px_-2px_0px_0px_#DFA339]" : "",
 
                 className

@@ -39,7 +39,7 @@ export function NewsletterSection() {
             >
                 <div className="grid md:grid-cols-2 gap-12 items-center">
 
-                    {/* --- LINKE SEITE --- */}
+                    {/* --- LEFT SIDE --- */}
                     <div className="z-10 text-left">
                         <h2 className="font-serif font-bold text-4xl md:text-5xl mb-6 text-coffee-dark">
                             Starte deinen <br/> einfachen Finanzweg
@@ -78,7 +78,7 @@ export function NewsletterSection() {
                         </form>
                     </div>
 
-                    {/* --- RECHTE SEITE: BILDER & SPARKLES --- */}
+                    {/* --- RIGHT SIDE: IMAGES & SPARKLES --- */}
                     <div className="relative flex justify-center min-h-[300px]">
                         <animated.div style={floatStyles} className="relative w-72 h-72 md:w-[420px] md:h-[420px] mt-10">
 

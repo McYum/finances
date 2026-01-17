@@ -1,3 +1,10 @@
+"use client";
+
+import Link from "next/link";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { RetroButton } from "@/components/ui/RetroButton";
+import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -7,7 +14,26 @@ export const metadata: Metadata = {
 
 export default function ImpressumPage() {
     return (
-        <article>
+        <>
+            <Header />
+            
+            {/* Back Button */}
+            <div className="bg-paper py-6 px-4 border-b border-coffee/10">
+                <div className="max-w-4xl mx-auto">
+                    <Link href="/">
+                        <RetroButton className="text-sm md:text-base px-6 py-3">
+                            <span className="flex items-center gap-2">
+                                <ChevronLeft size={20} />
+                                ZURÜCK
+                            </span>
+                        </RetroButton>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Content */}
+            <main className="bg-paper py-12 px-4 flex-grow">
+                <article className="max-w-4xl mx-auto">
             <h1>Impressum</h1>
 
             <section className="mb-8">
@@ -51,6 +77,10 @@ export default function ImpressumPage() {
                     Gewähr übernehmen.
                 </p>
             </section>
-        </article>
+                </article>
+            </main>
+            
+            <Footer />
+        </>
     );
 }
