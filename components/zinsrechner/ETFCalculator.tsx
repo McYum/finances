@@ -7,14 +7,11 @@ import { ETFControls } from "./ETFControls";
 import { ETFLineChart } from "./ETFLineChart";
 import { ETFPieChart } from "./ETFPieChart";
 import { generateHistoricalData } from "@/lib/calculations";
-import {
-    AVAILABLE_ETFS,
-    MOCK_ETF_DATA,
-    COFFEE_PRICE,
-    WEEKS_PER_YEAR,
-    ALPHA_VANTAGE_API_KEY,  // Dont delete
-    ALPHA_VANTAGE_BASE_URL  // Dont delete
-} from "@/constants/stocks";
+import { validateAPIResponse, extractField } from "@/lib/apiHelpers";
+import { apiLogger } from "@/lib/apiLogger";
+import { AVAILABLE_ETFS, MOCK_ETF_DATA } from "@/constants/etfs";
+import { COFFEE_PRICE, WEEKS_PER_YEAR } from "@/constants/pricing";
+import { ALPHA_VANTAGE_API_KEY, ALPHA_VANTAGE_BASE_URL, USE_API } from "@/constants/api";
 
 export function ETFCalculator() {
     const [selectedETF, setSelectedETF] = useState<string>("QQQ");
@@ -27,7 +24,7 @@ export function ETFCalculator() {
     const [apiStatus, setApiStatus] = useState<'loading' | 'api' | 'mock' | null>(null);
 
     const yearlyInvestment = coffeesPerWeek * COFFEE_PRICE * WEEKS_PER_YEAR;
-    const currentETF = AVAILABLE_ETFS.find(s => s.symbol === selectedETF);
+    const currentETF = AVAILABLE_ETFS.find((s: { symbol: string; name: string; avgReturn: number }) => s.symbol === selectedETF);
     const currentAvgReturn = currentETF?.avgReturn || 0.08;
 
     useEffect(() => {
@@ -38,92 +35,64 @@ export function ETFCalculator() {
         setLoading(true);
         setApiStatus('loading');
 
-        /*
-        // API Call
-        try {
-            const apiUrl = `${ALPHA_VANTAGE_BASE_URL}?function=ETF_PROFILE&symbol=${selectedETF}&apikey=${ALPHA_VANTAGE_API_KEY}`;
-            console.log("Fetching ETF data from API:", apiUrl);
+        if (USE_API) {
+            try {
+                const apiUrl = `${ALPHA_VANTAGE_BASE_URL}?function=ETF_PROFILE&symbol=${selectedETF}&apikey=${ALPHA_VANTAGE_API_KEY}`;
+                apiLogger.request(selectedETF);
 
-            const response = await fetch(apiUrl);
-            const data = await response.json();
+                const response = await fetch(apiUrl);
+                const data = await response.json();
 
-            console.log("Full API Response:", JSON.stringify(data, null, 2));
-            console.log("Response keys:", Object.keys(data));
-
-            // Check for API limit/error messages
-            if (data["Note"]) {
-                console.warn("API Note:", data["Note"]);
-                throw new Error("API limit reached");
-            }
-
-            if (data["Information"]) {
-                console.warn("API Information:", data["Information"]);
-                throw new Error("API information message received");
-            }
-
-            if (data["Error Message"]) {
-                console.warn("API Error:", data["Error Message"]);
-                throw new Error("API error message received");
-            }
-
-            if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
-                console.warn("Empty or invalid API response");
-                throw new Error("Empty API response");
-            }
-
-            const extractField = (fieldNames: string[]) => {
-                for (const name of fieldNames) {
-                    if (data[name]) return data[name];
+                const validation = validateAPIResponse(data);
+                if (!validation.isValid) {
+                    throw new Error(validation.error);
                 }
-                return "N/A";
-            };
 
-            console.log("Valid API response received, extracting data...");
+                setEtfInfo({
+                    symbol: extractField(data, ["symbol", "Symbol", "SYMBOL"]) !== "N/A"
+                        ? extractField(data, ["symbol", "Symbol", "SYMBOL"])
+                        : selectedETF,
+                    expenseRatio: extractField(data, [
+                        "expense_ratio", "expenseRatio", "Expense Ratio",
+                        "EXPENSE_RATIO", "expense ratio"
+                    ]),
+                    dividendYield: extractField(data, [
+                        "dividend_yield", "dividendYield", "Dividend Yield",
+                        "DIVIDEND_YIELD", "dividend yield"
+                    ]),
+                    inceptionDate: extractField(data, [
+                        "inception_date", "inceptionDate", "Inception Date",
+                        "INCEPTION_DATE", "inception date"
+                    ]),
+                    netAssets: extractField(data, [
+                        "net_assets", "netAssets", "Net Assets",
+                        "NET_ASSETS", "net assets", "aum", "AUM"
+                    ])
+                });
 
-            setEtfInfo({
-                symbol: extractField(["symbol", "Symbol", "SYMBOL"]) !== "N/A"
-                    ? extractField(["symbol", "Symbol", "SYMBOL"])
-                    : selectedETF,
-                expenseRatio: extractField([
-                    "expense_ratio", "expenseRatio", "Expense Ratio",
-                    "EXPENSE_RATIO", "expense ratio"
-                ]),
-                dividendYield: extractField([
-                    "dividend_yield", "dividendYield", "Dividend Yield",
-                    "DIVIDEND_YIELD", "dividend yield"
-                ]),
-                inceptionDate: extractField([
-                    "inception_date", "inceptionDate", "Inception Date",
-                    "INCEPTION_DATE", "inception date"
-                ]),
-                netAssets: extractField([
-                    "net_assets", "netAssets", "Net Assets",
-                    "NET_ASSETS", "net assets", "aum", "AUM"
-                ])
-            });
+                setUsingMockData(false);
+                setApiStatus('api');
 
-            setUsingMockData(false);
-            setApiStatus('api');
+                const historicalData = generateHistoricalData(
+                    selectedYears,
+                    coffeesPerWeek,
+                    currentAvgReturn,
+                    COFFEE_PRICE,
+                    WEEKS_PER_YEAR
+                );
+                setStockData(historicalData);
 
-            const historicalData = generateHistoricalData(
-                selectedYears,
-                coffeesPerWeek,
-                currentAvgReturn,
-                COFFEE_PRICE,
-                WEEKS_PER_YEAR
-            );
-            setStockData(historicalData);
-
-            console.log("Successfully loaded from API");
-            setLoading(false);
-            return;
-        } catch (error) {
-            console.error("API error, falling back to mock data:", error);
+                apiLogger.success(selectedETF);
+                setLoading(false);
+                return;
+            } catch (error) {
+                apiLogger.fallback(error);
+            }
+        } else {
+            apiLogger.demoMode();
         }
-        */
 
-        // Fallback to mock data
-        console.log("→ Loading demo data for:", selectedETF);
+        apiLogger.loadingDemo(selectedETF);
         await new Promise(resolve => setTimeout(resolve, 300));
         loadMockData();
         setLoading(false);
@@ -132,7 +101,6 @@ export function ETFCalculator() {
     const loadMockData = () => {
         const mockData = MOCK_ETF_DATA[selectedETF] || MOCK_ETF_DATA["QQQ"];
 
-        console.log("Mock data loaded:", mockData);
 
         setEtfInfo({
             symbol: selectedETF,
